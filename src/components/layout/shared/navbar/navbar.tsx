@@ -6,7 +6,7 @@ export default function Navbar() {
     return (
         <React.Fragment>
             <div>
-                <div className='border-b border-muted-foreground/10'>
+                <div className='border-b border-muted-foreground/10 hidden lg:block'>
                     <NavbarTopSideLayout />
                 </div>
                 <NavbarDownSideLayout />

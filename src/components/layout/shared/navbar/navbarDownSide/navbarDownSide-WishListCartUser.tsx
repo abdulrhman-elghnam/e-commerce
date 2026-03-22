@@ -3,12 +3,13 @@ import Link from 'next/link'
 import React from 'react'
 import { FaHeadset } from 'react-icons/fa'
 import { IoIosHeart, IoMdCart } from 'react-icons/io'
+import NavbarDownSideResponseDesign from './navbarDownSide-ResponseDesign'
 
 export default function NavbarDownSideWishListCartUser() {
     return (
         <React.Fragment>
             <div className='flex items-center gap-2'>
-                <div className=' flex items-center gap-2 border-e-2 pe-6'>
+                <div className='items-center gap-2 border-e-2 pe-6 lg:flex hidden'>
                     <span className='bg-primary/10 text-green-900 p-2 rounded-full flex items-center justify-center'  >
                         <FaHeadset />
                     </span>
@@ -20,9 +21,12 @@ export default function NavbarDownSideWishListCartUser() {
                     <span className='text-muted-foreground text-lg hover:text-primary transition-all duration-200'><IoIosHeart /></span>
                     <span className='text-muted-foreground text-lg hover:text-primary transition-all duration-200'><IoMdCart /></span>
                 </div>
-                <Button asChild className='rounded-full'>
+                <Button asChild className='rounded-full hidden lg:block'>
                     <Link href='/signin'>Sign in</Link>
                 </Button>
+                <div className='lg:hidden'>
+                    <NavbarDownSideResponseDesign />
+                </div>
             </div>
         </React.Fragment>
     )
