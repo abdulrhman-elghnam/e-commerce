@@ -7,7 +7,7 @@ import NavbarDownSideWishListCartUser from './navbarDownSide-WishListCartUser'
 export default function NavbarDownSideLayout() {
     return (
         <React.Fragment>
-            <div className='py-4 flex justify-between items-center lg:gap-0 gap-8'>
+            <div className='py-4 px-4 flex justify-between items-center lg:gap-0 gap-8'>
                 <NavbarDownSideLogo />
                 <div className='lg:block hidden'>
                     <NavbarDownSideSearch />
@@ -16,7 +16,7 @@ export default function NavbarDownSideLayout() {
                     <NavbarDownSideNavigation />
                 </div>
                 <div className='flex justify-between lg:block'>
-                <NavbarDownSideWishListCartUser />
+                    <NavbarDownSideWishListCartUser />
                 </div>
             </div>
         </React.Fragment>
