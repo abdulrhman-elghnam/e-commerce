@@ -5,8 +5,8 @@ import { MdOutlineEmail } from "react-icons/md"
 
 export default function NavbarTopSide() {
     return (
-        <div className="hidden h-[41px] border-b bg-white px-6 text-sm text-[#6A7282] lg:block 2xl:px-[208px]">
-            <div className="mx-auto flex h-10 max-w-[1504px] items-center justify-between">
+        <div className="hidden h-[41px] w-full border-b bg-white text-sm text-[#6A7282] lg:block">
+            <div className="mx-auto flex h-10 w-full max-w-screen-2xl items-center justify-between px-4 lg:px-6 xl:px-10 2xl:px-16">
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
                         <FaTruck className="text-primary" />

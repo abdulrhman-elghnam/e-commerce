@@ -18,8 +18,8 @@ const categoryItems = [
 
 export default function NavbarDownSide() {
     return (
-        <div className="bg-white px-4 lg:px-6 2xl:px-[208px]">
-            <div className="mx-auto flex h-[72px] w-full max-w-[1504px] items-center justify-between gap-4">
+        <div className="w-full bg-white">
+            <div className="mx-auto flex h-[72px] w-full max-w-screen-2xl items-center justify-between gap-4 px-4 lg:px-6 xl:px-10 2xl:px-16">
                 <Link href="/" className="shrink-0">
                     <Image src={freshcartLogo} alt="FreshCart" priority className="h-8 w-auto" />
                 </Link>
