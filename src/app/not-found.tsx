@@ -1,12 +1,11 @@
 import Link from "next/link"
 import Image from "next/image"
-import { SiteShell } from "@/components/layout/shell/site-shell"
 import { Button } from "@/components/ui/button"
 import errorIllustration from "@/assets/images/error.svg"
 
 export default function NotFound() {
   return (
-    <SiteShell as="div" className="flex flex-col items-center py-16 text-center md:py-24">
+    <section className="flex flex-col items-center py-16 text-center md:py-24">
       <div className="relative mb-8 w-full max-w-md">
         <Image
           src={errorIllustration}
@@ -32,6 +31,6 @@ export default function NotFound() {
           <Link href="/shop">Browse shop</Link>
         </Button>
       </div>
-    </SiteShell>
+    </section>
   )
 }
