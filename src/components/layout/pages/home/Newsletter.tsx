@@ -35,8 +35,9 @@ export default function Newsletter() {
     }
 
     return (
-        <section className="mx-auto w-full max-w-screen-2xl px-4 py-10 lg:px-6 xl:px-10 2xl:px-16">
-            <div className="relative grid min-h-[504px] gap-8 rounded-3xl bg-[#F0FDF4] p-6 lg:grid-cols-[1.7fr_1fr] lg:p-14">
+        <section className="w-full py-10">
+            <div className="app-container">
+                <div className="relative grid min-h-[504px] gap-8 rounded-3xl bg-[#F0FDF4] p-6 lg:grid-cols-[1.7fr_1fr] lg:p-14">
                 <div className="space-y-6">
                     <div className="flex items-center gap-4">
                         <span className="flex size-14 items-center justify-center rounded-2xl bg-linear-to-br from-[#00BC7D] to-[#00BBA7] text-white shadow-[0px_10px_15px_-3px_rgba(0,188,125,0.3),0px_4px_6px_-4px_rgba(0,188,125,0.3)]">
@@ -128,6 +129,7 @@ export default function Newsletter() {
                             </div>
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
         </section>

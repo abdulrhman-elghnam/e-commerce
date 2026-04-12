@@ -1,10 +1,11 @@
+import SearchCategories from '@/components/layout/pages/SearchCategories/SearchCategories'
 import React from 'react'
 
 export default function page() {
     return (
         <React.Fragment>
             <div>
-                <h1>categories</h1>
+                <SearchCategories />
             </div>
         </React.Fragment>
     )

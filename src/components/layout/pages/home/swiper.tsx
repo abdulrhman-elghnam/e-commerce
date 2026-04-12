@@ -53,7 +53,7 @@ export default function Swiper() {
                                 <Image src={bannerImage} alt={`Banner ${idx + 1}`} fill priority={idx === 0} className="object-cover" />
                                 <div className="absolute inset-0 bg-linear-to-r from-[rgba(0,201,80,0.9)] to-[rgba(5,223,114,0.5)]" />
 
-                                <div className="absolute inset-0 mx-auto flex w-[90%] max-w-screen-2xl items-center px-4 lg:px-6 xl:px-10 2xl:px-16">
+                                <div className="absolute inset-0 app-container flex items-center">
                                     <div className="max-w-[860px] space-y-4">
                                         <h2 className="max-w-[384px] text-3xl leading-9 font-bold text-white">{slide.title}</h2>
                                         <p className="text-base font-medium text-white">{slide.subtitle}</p>

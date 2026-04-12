@@ -1,10 +1,11 @@
+import WishlistPage from '@/components/layout/pages/wishlist/wishlistPage';
 import React from 'react';
 
 const Page = () => {
     return (
-        <div>
-            wishlist
-        </div>
+        <React.Fragment>
+            <WishlistPage />
+        </React.Fragment>
     );
 }
 

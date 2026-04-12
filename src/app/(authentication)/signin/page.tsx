@@ -1,10 +1,10 @@
-import LoginPage from "@/components/layout/pages/logIn/LoginPage";
+import SignInPage from "@/components/layout/pages/signIn/SignInPage";
 
 export default function Page() {
 
     return (
         <div>
-            <LoginPage/>
+            <SignInPage/>
         </div>
     )
 }

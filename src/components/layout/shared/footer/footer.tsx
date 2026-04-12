@@ -61,7 +61,7 @@ export default function Footer() {
     return (
         <>
             <div className="w-full border-y border-[#DCFCE7] bg-[#F0FDF4]">
-                <div className="mx-auto grid w-full max-w-screen-2xl gap-5 px-4 py-6 sm:grid-cols-2 lg:px-6 xl:grid-cols-4 xl:px-10 2xl:px-16">
+                <div className="app-container grid gap-5 py-6 sm:grid-cols-2 xl:grid-cols-4">
                     <div className="flex items-center gap-3">
                         <span className="flex size-12 items-center justify-center rounded-xl bg-[#DCFCE7] text-primary">
                             <TbTruckDelivery className="size-6" />
@@ -105,7 +105,7 @@ export default function Footer() {
             </div>
 
             <footer id="footer" className="w-full bg-[#101828] pt-12">
-                <div className="mx-auto grid w-full max-w-screen-2xl gap-10 px-4 pb-12 lg:px-6 xl:grid-cols-[2fr_1fr_1fr_1fr_1fr] xl:px-10 2xl:px-16">
+                <div className="app-container grid gap-10 pb-12 xl:grid-cols-[2fr_1fr_1fr_1fr_1fr]">
                     <div>
                         <div className="mb-7 inline-flex rounded-lg bg-white px-4 py-2">
                             <Link href="/" className="shrink-0">
@@ -156,7 +156,7 @@ export default function Footer() {
                 </div>
 
                 <div className="border-t border-[#1E2939]">
-                    <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-4 px-4 py-6 text-sm lg:flex-row lg:items-center lg:justify-between lg:px-6 xl:px-10 2xl:px-16">
+                    <div className="app-container flex flex-col gap-4 py-6 text-sm lg:flex-row lg:items-center lg:justify-between">
                         <p className="font-medium text-[#6A7282]">© 2026 FreshCart. All rights reserved.</p>
                         <div className="flex flex-wrap items-center gap-4 text-[#6A7282]">
                             <div className="flex items-center gap-2">
