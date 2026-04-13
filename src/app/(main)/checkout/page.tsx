@@ -5,15 +5,13 @@ import Link from "next/link";
 import CheckoutForm from "@/components/layout/pages/checkout/CheckoutForm";
 import { ShoppingBag, ArrowLeft, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { getCart } from "@/lib/services/cartService";
 import { toast } from "sonner";
 
 export default function CheckoutPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const cartIdFromQuery = searchParams.get("cartId");
 
   const [cartId, setCartId] = useState("");
   const [subtotal, setSubtotal] = useState(0);
@@ -32,6 +30,10 @@ export default function CheckoutPage() {
       setLoading(true);
       try {
         const cart = await getCart(session.user.token);
+        const cartIdFromQuery =
+          typeof window !== "undefined"
+            ? new URLSearchParams(window.location.search).get("cartId")
+            : null;
         const resolvedCartId = cartIdFromQuery || cart?.data?._id || "";
 
         if (!resolvedCartId) {
@@ -52,7 +54,7 @@ export default function CheckoutPage() {
     };
 
     loadCart();
-  }, [status, session, router, cartIdFromQuery]);
+  }, [status, session, router]);
 
   return (
     <div className="min-h-screen bg-[rgba(249,250,251,0.5)] font-['Exo'] pt-[40px] md:pt-[113px] pb-[120px]">
