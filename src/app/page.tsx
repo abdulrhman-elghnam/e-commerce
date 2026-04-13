@@ -7,6 +7,8 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import FeaturedProducts from "@/components/layout/pages/home/FeaturedProducts/Featured Products";
 
+export const dynamic = "force-dynamic";
+
 export default function Page() {
   return (
     <React.Fragment>
