@@ -2,63 +2,83 @@
 
 import React, { useState } from 'react';
 import { z } from 'zod';
-import { registerSchema } from './schema';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { signIn } from 'next-auth/react';
+import { registerSchema, RegisterFormValues } from './schema';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Star, ShieldCheck, Zap, CheckCircle2 } from 'lucide-react';
+import { Star, ShieldCheck, Zap, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import { FaFacebook } from 'react-icons/fa';
 import Link from 'next/link';
 
 export default function SignUpPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    rePassword: '',
-    phone: '',
-    terms: false,
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    mode: "onChange",
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      rePassword: '',
+      phone: '',
+      terms: false,
+    },
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const passwordVal = watch("password") || "";
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
-    }
-  };
-
-  const handleCheckedChange = (checked: boolean) => {
-    setFormData((prev) => ({ ...prev, terms: checked }));
-    if (errors.terms) {
-      setErrors((prev) => ({ ...prev, terms: '' }));
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: RegisterFormValues) => {
     try {
-      registerSchema.parse(formData);
-      setErrors({});
-      // Proceed with registration
-      console.log('Registration data valid:', formData);
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        const fieldErrors: Record<string, string> = {};
-        err.errors.forEach((error) => {
-          if (error.path[0]) {
-            fieldErrors[error.path[0] as string] = error.message;
-          }
-        });
-        setErrors(fieldErrors);
+      const res = await fetch("https://ecommerce.routemisr.com/api/v1/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          password: data.password,
+          rePassword: data.rePassword,
+          phone: data.phone,
+        }),
+      });
+
+      const resData = await res.json();
+
+      if (!res.ok) {
+        const errorMsg = resData.errors?.msg || (resData.message === "fail" ? "Registration failed. Please try again." : resData.message) || "Registration failed. Please try again.";
+        toast.error(errorMsg);
+        return;
       }
+
+      // Auto sign-in after successful registration
+      const signInResult = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
+
+      if (signInResult?.ok) {
+        toast.success("Account created successfully!");
+        router.push("/");
+        router.refresh();
+      } else {
+        toast.success("Account created. Please sign in.");
+        router.push("/signin");
+      }
+    } catch (err: any) {
+      toast.error("An unexpected error occurred. Please try again.");
     }
   };
 
@@ -124,7 +144,6 @@ export default function SignUpPage() {
           <div className="flex flex-col p-4 gap-4 w-full bg-white shadow-sm rounded-md border border-gray-100">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-                {/* Fallback avatar */}
                 <div className="w-full h-full bg-[#16A34A] text-white flex items-center justify-center font-bold text-lg">
                   SJ
                 </div>
@@ -141,7 +160,7 @@ export default function SignUpPage() {
               </div>
             </div>
             <p className="font-['Exo'] italic font-medium text-base text-[#4A5565] leading-6">
-              "FreshCart has transformed my shopping experience. The quality of the products is outstanding, and the delivery is always on time. Highly recommend!"
+              &quot;FreshCart has transformed my shopping experience. The quality of the products is outstanding, and the delivery is always on time. Highly recommend!&quot;
             </p>
           </div>
         </div>
@@ -174,50 +193,56 @@ export default function SignUpPage() {
             <div className="flex-grow border-t border-[#D1D5DC] opacity-30"></div>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 w-full">
             <div className="flex flex-col gap-2">
               <label className="font-['Exo'] font-medium text-base text-[#364153]">Name*</label>
               <Input
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
+                {...register("name")}
                 placeholder="Ali"
-                className={`h-[42px] border-[#99A1AF]/40 rounded-md placeholder:text-[#364153]/50 focus-visible:ring-1 focus-visible:ring-[#16A34A] focus-visible:border-[#16A34A] ${errors.name ? 'border-red-500' : ''}`}
+                className={`h-[42px] border-[#99A1AF]/40 rounded-md placeholder:text-[#364153]/50 focus-visible:ring-1 focus-visible:ring-[#16A34A] focus-visible:border-[#16A34A] ${errors.name ? 'border-red-500 bg-red-50/30' : ''}`}
               />
-              {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+              {errors.name && (
+                <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.name.message}
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col gap-2">
               <label className="font-['Exo'] font-medium text-base text-[#364153]">Email*</label>
               <Input
-                name="email"
+                {...register("email")}
                 type="email"
-                value={formData.email}
-                onChange={handleChange}
                 placeholder="ali@example.com"
-                className={`h-[42px] border-[#99A1AF]/40 rounded-md placeholder:text-[#364153]/50 focus-visible:ring-1 focus-visible:ring-[#16A34A] focus-visible:border-[#16A34A] ${errors.email ? 'border-red-500' : ''}`}
+                className={`h-[42px] border-[#99A1AF]/40 rounded-md placeholder:text-[#364153]/50 focus-visible:ring-1 focus-visible:ring-[#16A34A] focus-visible:border-[#16A34A] ${errors.email ? 'border-red-500 bg-red-50/30' : ''}`}
               />
-              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.email.message}
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col gap-2 relative">
               <label className="font-['Exo'] font-medium text-base text-[#364153]">Password*</label>
               <Input
-                name="password"
+                {...register("password")}
                 type="password"
-                value={formData.password}
-                onChange={handleChange}
                 placeholder="create a strong password"
-                className={`h-[42px] border-[#99A1AF]/40 rounded-md placeholder:text-[#364153]/50 focus-visible:ring-1 focus-visible:ring-[#16A34A] focus-visible:border-[#16A34A] ${errors.password ? 'border-red-500' : ''}`}
+                className={`h-[42px] border-[#99A1AF]/40 rounded-md placeholder:text-[#364153]/50 focus-visible:ring-1 focus-visible:ring-[#16A34A] focus-visible:border-[#16A34A] ${errors.password ? 'border-red-500 bg-red-50/30' : ''}`}
               />
-              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+              {errors.password && (
+                <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.password.message}
+                </p>
+              )}
               
               <div className="flex items-center gap-2 mt-2">
                 <div className="h-1 flex-1 bg-[#E5E7EB] rounded-full overflow-hidden">
-                  <div className={`h-full ${formData.password.length > 0 ? (formData.password.length >= 8 ? 'bg-[#16A34A] w-full' : 'bg-red-500 w-1/3') : ''}`}></div>
+                  <div className={`h-full transition-all ${passwordVal.length > 0 ? (passwordVal.length >= 8 ? 'bg-[#16A34A] w-full' : 'bg-red-500 w-1/3') : ''}`}></div>
                 </div>
                 <span className="font-['Exo'] font-medium text-sm text-[#364153] min-w-[50px]">
-                  {formData.password.length === 0 ? 'Weak' : formData.password.length >= 8 ? 'Strong' : 'Weak'}
+                  {passwordVal.length === 0 ? 'Weak' : passwordVal.length >= 8 ? 'Strong' : 'Weak'}
                 </span>
               </div>
               <p className="font-['Exo'] font-medium text-xs text-[#6A7282] mt-1">
@@ -228,51 +253,73 @@ export default function SignUpPage() {
             <div className="flex flex-col gap-2">
               <label className="font-['Exo'] font-medium text-base text-[#364153]">Confirm Password*</label>
               <Input
-                name="rePassword"
+                {...register("rePassword")}
                 type="password"
-                value={formData.rePassword}
-                onChange={handleChange}
                 placeholder="confirm your password"
-                className={`h-[42px] border-[#99A1AF]/40 rounded-md placeholder:text-[#364153]/50 focus-visible:ring-1 focus-visible:ring-[#16A34A] focus-visible:border-[#16A34A] ${errors.rePassword ? 'border-red-500' : ''}`}
+                className={`h-[42px] border-[#99A1AF]/40 rounded-md placeholder:text-[#364153]/50 focus-visible:ring-1 focus-visible:ring-[#16A34A] focus-visible:border-[#16A34A] ${errors.rePassword ? 'border-red-500 bg-red-50/30' : ''}`}
               />
-              {errors.rePassword && <p className="text-red-500 text-sm mt-1">{errors.rePassword}</p>}
+              {errors.rePassword && (
+                <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.rePassword.message}
+                </p>
+              )}
             </div>
 
             <div className="flex flex-col gap-2">
               <label className="font-['Exo'] font-medium text-base text-[#364153]">Phone Number*</label>
               <Input
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
+                {...register("phone")}
                 placeholder="+1 234 567 8900"
-                className={`h-[42px] border-[#99A1AF]/40 rounded-md placeholder:text-[#364153]/50 focus-visible:ring-1 focus-visible:ring-[#16A34A] focus-visible:border-[#16A34A] ${errors.phone ? 'border-red-500' : ''}`}
+                className={`h-[42px] border-[#99A1AF]/40 rounded-md placeholder:text-[#364153]/50 focus-visible:ring-1 focus-visible:ring-[#16A34A] focus-visible:border-[#16A34A] ${errors.phone ? 'border-red-500 bg-red-50/30' : ''}`}
               />
-              {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+              {errors.phone && (
+                <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.phone.message}
+                </p>
+              )}
             </div>
 
             <div className="flex items-center gap-2 mt-2">
-              <Checkbox 
-                id="terms" 
-                checked={formData.terms}
-                onCheckedChange={handleCheckedChange}
-                className="border-[#767676] data-[state=checked]:bg-[#16A34A] data-[state=checked]:border-[#16A34A]" 
+              <Controller
+                name="terms"
+                control={control}
+                render={({ field }) => (
+                  <Checkbox 
+                    id="terms" 
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    className="border-[#767676] data-[state=checked]:bg-[#16A34A] data-[state=checked]:border-[#16A34A]" 
+                  />
+                )}
               />
               <label htmlFor="terms" className="font-['Exo'] font-medium text-base text-[#364153] cursor-pointer">
                 I agree to the Terms of Service and Privacy Policy *
               </label>
             </div>
-            {errors.terms && <p className="text-red-500 text-sm">{errors.terms}</p>}
+            {errors.terms && (
+              <p className="text-red-500 text-sm flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" /> {errors.terms.message}
+              </p>
+            )}
 
             <Button 
               type="submit" 
+              disabled={isSubmitting}
               className="w-full h-10 mt-4 bg-[#16A34A] hover:bg-[#10833a] font-['Exo'] font-semibold text-base text-white rounded-lg shadow-sm"
             >
-              Create My Account
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Creating account...
+                </span>
+              ) : (
+                'Create My Account'
+              )}
             </Button>
 
             <div className="border-t border-[#D1D5DC] opacity-30 mt-6 pt-6 w-full"></div>
             <p className="font-['Exo'] font-medium text-base text-[#364153] text-center w-full">
-              Already have an account? <Link href="/login" className="text-[#16A34A] hover:underline font-semibold">Sign In</Link>
+              Already have an account? <Link href="/signin" className="text-[#16A34A] hover:underline font-semibold">Sign In</Link>
             </p>
           </form>
         </div>

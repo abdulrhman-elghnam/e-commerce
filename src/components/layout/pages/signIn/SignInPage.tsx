@@ -3,18 +3,23 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { signIn } from 'next-auth/react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signInSchema, SignInFormValues } from './schema';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, Users, Star } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, Users, Star, Loader2, AlertCircle } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import { FaFacebook, FaCheck } from 'react-icons/fa';
 import cartImage from '@/assets/images/2e5810ff3e-e750761ebcd4ae5907db.png';
+
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const {
     register,
@@ -23,6 +28,7 @@ export default function SignInPage() {
     formState: { errors, isSubmitting },
   } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
+    mode: "onChange",
     defaultValues: {
       email: '',
       password: '',
@@ -31,8 +37,26 @@ export default function SignInPage() {
   });
 
   const onSubmit = async (data: SignInFormValues) => {
-    // Handle login submission
-    console.log('Form Values', data);
+    try {
+      const result = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      if (result?.ok) {
+        toast.success("Signed in successfully");
+        router.push("/");
+        router.refresh();
+      }
+    } catch (err: any) {
+      toast.error("An unexpected error occurred. Please try again.");
+    }
   };
 
   return (
@@ -133,11 +157,13 @@ export default function SignInPage() {
                 <Input 
                   {...register("email")}
                   placeholder="Enter your email"
-                  className="h-[52px] pl-12 rounded-xl border-2 border-[#E5E7EB] text-[#364153] text-[16px] placeholder:text-[#364153]/50 focus-visible:ring-1 focus-visible:ring-[#16A34A] focus-visible:border-[#16A34A]"
+                  className={`h-[52px] pl-12 rounded-xl border-2 text-[#364153] text-[16px] placeholder:text-[#364153]/50 focus-visible:ring-1 focus-visible:ring-[#16A34A] focus-visible:border-[#16A34A] ${errors.email ? 'border-red-400 bg-red-50/30' : 'border-[#E5E7EB]'}`}
                 />
               </div>
               {errors.email && (
-                <span className="text-red-500 text-xs">{errors.email.message}</span>
+                <span className="text-red-500 text-xs font-medium flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.email.message}
+                </span>
               )}
             </div>
 
@@ -157,7 +183,7 @@ export default function SignInPage() {
                   {...register("password")}
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
-                  className="h-[52px] pl-12 pr-12 rounded-xl border-2 border-[#E5E7EB] text-[#364153] text-[16px] placeholder:text-[#364153]/50 focus-visible:ring-1 focus-visible:ring-[#16A34A] focus-visible:border-[#16A34A]"
+                  className={`h-[52px] pl-12 pr-12 rounded-xl border-2 text-[#364153] text-[16px] placeholder:text-[#364153]/50 focus-visible:ring-1 focus-visible:ring-[#16A34A] focus-visible:border-[#16A34A] ${errors.password ? 'border-red-400 bg-red-50/30' : 'border-[#E5E7EB]'}`}
                 />
                 <button 
                   type="button"
@@ -168,7 +194,9 @@ export default function SignInPage() {
                 </button>
               </div>
               {errors.password && (
-                <span className="text-red-500 text-xs">{errors.password.message}</span>
+                <span className="text-red-500 text-xs font-medium flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> {errors.password.message}
+                </span>
               )}
             </div>
 
@@ -197,7 +225,14 @@ export default function SignInPage() {
               className="w-full h-[52px] bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] text-[18px] leading-[28px] font-semibold mt-2"
               disabled={isSubmitting}
             >
-              Sign In
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Signing in...
+                </span>
+              ) : (
+                'Sign In'
+              )}
             </Button>
           </form>
 

@@ -1,7 +1,12 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
+import { useSession, signOut } from "next-auth/react"
 import { BiCategory } from "react-icons/bi"
-import { FiHeadphones, FiHeart, FiLogOut, FiMenu, FiSearch, FiShoppingCart, FiUser, FiX } from "react-icons/fi"
+import { FiHeadphones, FiHeart, FiLogIn, FiLogOut, FiMenu, FiSearch, FiShoppingCart, FiUser, FiX } from "react-icons/fi"
+import { useSelector } from "react-redux"
+import { RootState } from "@/lib/redux/store"
 
 import freshcartLogo from "@/assets/images/freshcart-logo.svg"
 import { Button } from "@/components/ui/button"
@@ -17,6 +22,12 @@ const categoryItems = [
 ]
 
 export default function NavbarDownSide() {
+    const { data: session, status } = useSession()
+    const isAuthenticated = status === "authenticated"
+    const userName = session?.user?.name || "User"
+    const wishlistCount = useSelector((state: RootState) => state.wishlist.count)
+    const cartCount = useSelector((state: RootState) => state.cart.count)
+
     return (
         <div className="w-full bg-white sticky z-[50] top-0 border-b border-[#F3F4F6] shadow-sm">
             <div className="app-container flex h-[72px] items-center justify-between gap-4">
@@ -82,15 +93,48 @@ export default function NavbarDownSide() {
                         </span>
                     </Link>
 
-                    <Link href="/wishlist" className="rounded-full p-2.5 text-[#6A7282] hover:bg-[#F3F4F6]">
-                        <FiHeart className="size-5" />
-                    </Link>
-                    <Link href="/cart" className="rounded-full p-2.5 text-[#6A7282] hover:bg-[#F3F4F6]">
-                        <FiShoppingCart className="size-5" />
-                    </Link>
-                    <Link href="/account" className="hidden rounded-full p-2.5 text-[#6A7282] hover:bg-[#F3F4F6] md:block">
-                        <FiUser className="size-5" />
-                    </Link>
+                    {isAuthenticated && (
+                        <div className="flex items-center">
+                            <Link href="/wishlist" className="relative rounded-full p-2.5 text-[#6A7282] hover:bg-[#F3F4F6]">
+                                <FiHeart className="size-5" />
+                                {wishlistCount > 0 && (
+                                    <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-[#FB2C36] text-[10px] font-bold text-white">
+                                        {wishlistCount > 99 ? '99+' : wishlistCount}
+                                    </span>
+                                )}
+                            </Link>
+                            <Link href="/cart" className="relative rounded-full p-2.5 text-[#6A7282] hover:bg-[#F3F4F6]">
+                                <FiShoppingCart className="size-5" />
+                                {cartCount > 0 && (
+                                    <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-[#16A34A] text-[10px] font-bold text-white">
+                                        {cartCount > 99 ? '99+' : cartCount}
+                                    </span>
+                                )}
+                            </Link>
+                            <Link href="/account" className="hidden rounded-full p-2.5 text-[#6A7282] hover:bg-[#F3F4F6] md:block">
+                                <FiUser className="size-5" />
+                            </Link>
+                        </div>
+                    )}
+
+                    {!isAuthenticated && status !== "loading" && (
+                        <div className="hidden items-center gap-2 md:flex">
+                            <Link
+                                href="/signin"
+                                className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-[#364153] hover:bg-[#F3F4F6] transition-colors"
+                            >
+                                <FiLogIn className="size-4" />
+                                Sign In
+                            </Link>
+                            <Link
+                                href="/signup"
+                                className="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white bg-[#16A34A] hover:bg-[#15803D] transition-colors"
+                            >
+                                Sign Up
+                            </Link>
+                        </div>
+                    )}
+
                     <Sheet>
                         <SheetTrigger asChild>
                             <button type="button" className="rounded-full p-2.5 text-[#6A7282] hover:bg-[#F3F4F6] xl:hidden">
@@ -166,46 +210,78 @@ export default function NavbarDownSide() {
 
                             <div className="mx-4 border-t border-[#F3F4F6]" />
 
-                            <div className="space-y-1 p-4">
-                                <Link
-                                    href="/wishlist"
-                                    className="flex h-[60px] items-center justify-between rounded-xl px-4 hover:bg-[#F3F4F6]"
-                                >
-                                    <span className="flex items-center gap-3">
-                                        <span className="flex size-9 items-center justify-center rounded-full bg-[#FEF2F2] text-[#FB2C36]">
-                                            <FiHeart className="size-5" />
-                                        </span>
-                                        <span className="text-base font-medium text-[#364153]">Wishlist</span>
-                                    </span>
-                                    <span className="rounded-full bg-[#FB2C36] px-2.5 py-1 text-xs font-bold text-white">5</span>
-                                </Link>
-                                <Link href="/cart" className="flex h-[60px] items-center justify-between rounded-xl px-4 hover:bg-[#F3F4F6]">
-                                    <span className="flex items-center gap-3">
-                                        <span className="flex size-9 items-center justify-center rounded-full bg-[#F0FDF4] text-[#16A34A]">
-                                            <FiShoppingCart className="size-5" />
-                                        </span>
-                                        <span className="text-base font-medium text-[#364153]">Cart</span>
-                                    </span>
-                                    <span className="rounded-full bg-[#16A34A] px-2.5 py-1 text-xs font-bold text-white">3</span>
-                                </Link>
-                            </div>
+                            {isAuthenticated ? (
+                                <>
+                                    <div className="space-y-1 p-4">
+                                        <Link
+                                            href="/wishlist"
+                                            className="flex h-[60px] items-center justify-between rounded-xl px-4 hover:bg-[#F3F4F6]"
+                                        >
+                                            <span className="flex items-center gap-3">
+                                                <span className="flex size-9 items-center justify-center rounded-full bg-[#FEF2F2] text-[#FB2C36]">
+                                                    <FiHeart className="size-5" />
+                                                </span>
+                                                <span className="text-base font-medium text-[#364153]">Wishlist</span>
+                                            </span>
+                                            {wishlistCount > 0 && (
+                                                <span className="rounded-full bg-[#FB2C36] px-2.5 py-1 text-xs font-bold text-white">
+                                                    {wishlistCount > 99 ? '99+' : wishlistCount}
+                                                </span>
+                                            )}
+                                        </Link>
+                                        <Link href="/cart" className="flex h-[60px] items-center justify-between rounded-xl px-4 hover:bg-[#F3F4F6]">
+                                            <span className="flex items-center gap-3">
+                                                <span className="flex size-9 items-center justify-center rounded-full bg-[#F0FDF4] text-[#16A34A]">
+                                                    <FiShoppingCart className="size-5" />
+                                                </span>
+                                                <span className="text-base font-medium text-[#364153]">Cart</span>
+                                            </span>
+                                            {cartCount > 0 && (
+                                                <span className="rounded-full bg-[#16A34A] px-2.5 py-1 text-xs font-bold text-white">
+                                                    {cartCount > 99 ? '99+' : cartCount}
+                                                </span>
+                                            )}
+                                        </Link>
+                                    </div>
 
-                            <div className="mx-4 border-t border-[#F3F4F6]" />
+                                    <div className="mx-4 border-t border-[#F3F4F6]" />
 
-                            <div className="space-y-1 p-4 pb-6">
-                                <Link href="/account" className="flex h-[60px] items-center gap-3 rounded-xl px-4 hover:bg-[#F3F4F6]">
-                                    <span className="flex size-9 items-center justify-center rounded-full bg-[#F3F4F6] text-[#6A7282]">
-                                        <FiUser className="size-5" />
-                                    </span>
-                                    <span className="text-base font-medium text-[#364153]">Usama</span>
-                                </Link>
-                                <button type="button" className="flex h-[60px] w-full items-center gap-3 rounded-xl px-4 hover:bg-[#F3F4F6]">
-                                    <span className="flex size-9 items-center justify-center rounded-full bg-[#FEF2F2] text-[#FB2C36]">
-                                        <FiLogOut className="size-5" />
-                                    </span>
-                                    <span className="text-base font-medium text-[#E7000B]">Sign Out</span>
-                                </button>
-                            </div>
+                                    <div className="space-y-1 p-4 pb-6">
+                                        <Link href="/account" className="flex h-[60px] items-center gap-3 rounded-xl px-4 hover:bg-[#F3F4F6]">
+                                            <span className="flex size-9 items-center justify-center rounded-full bg-[#F3F4F6] text-[#6A7282]">
+                                                <FiUser className="size-5" />
+                                            </span>
+                                            <span className="text-base font-medium text-[#364153]">{userName}</span>
+                                        </Link>
+                                        <button
+                                            type="button"
+                                            onClick={() => signOut({ callbackUrl: "/" })}
+                                            className="flex h-[60px] w-full items-center gap-3 rounded-xl px-4 hover:bg-[#F3F4F6]"
+                                        >
+                                            <span className="flex size-9 items-center justify-center rounded-full bg-[#FEF2F2] text-[#FB2C36]">
+                                                <FiLogOut className="size-5" />
+                                            </span>
+                                            <span className="text-base font-medium text-[#E7000B]">Sign Out</span>
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="space-y-2 p-4 pb-6">
+                                    <Link
+                                        href="/signin"
+                                        className="flex h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-[#E5E7EB] text-base font-medium text-[#364153] hover:bg-[#F3F4F6] transition-colors"
+                                    >
+                                        <FiLogIn className="size-5" />
+                                        Sign In
+                                    </Link>
+                                    <Link
+                                        href="/signup"
+                                        className="flex h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#16A34A] text-base font-semibold text-white hover:bg-[#15803D] transition-colors"
+                                    >
+                                        Create Account
+                                    </Link>
+                                </div>
+                            )}
 
                             <Link
                                 href="/support"

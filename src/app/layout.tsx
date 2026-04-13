@@ -3,6 +3,9 @@ import { Exo } from "next/font/google"
 import "./globals.css"
 import Navbar from "@/components/layout/shared/navbar/navbar"
 import Footer from "@/components/layout/shared/footer/footer";
+import NextAuthProvider from "@/components/providers/NextAuthProvider";
+import ReduxProvider from "@/components/providers/ReduxProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 const exo = Exo({
   variable: "--font-exo",
@@ -22,11 +25,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${exo.className} flex min-h-screen flex-col antialiased`}>
-        <main className="flex-1 pb-16 md:pb-0">
-          <Navbar />
-          {children}
-          <Footer />
-        </main>
+        <NextAuthProvider>
+          <ReduxProvider>
+            <main className="flex-1 pb-16 md:pb-0">
+              <Navbar />
+              {children}
+              <Footer />
+            </main>
+            <Toaster />
+          </ReduxProvider>
+        </NextAuthProvider>
       </body>
     </html>
   )

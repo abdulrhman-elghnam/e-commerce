@@ -3,6 +3,7 @@ import { Eye, Heart, ArrowLeftRight, Star, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getAllProducts } from '@/service/Products.service';
+import AddToCartButton from '@/components/layout/shared/AddToCartButton';
 
 export default async function FeaturedProducts() {
     const response = await getAllProducts();
@@ -94,9 +95,7 @@ export default async function FeaturedProducts() {
                                         )}
                                     </div>
 
-                                    <button className="w-10 h-10 bg-[#16A34A] rounded-full flex justify-center items-center text-white shrink-0 hover:bg-[#10833a] transition-colors shadow-sm relative z-10" title="Add to Cart">
-                                        <ShoppingCart size={18} strokeWidth={2.5} />
-                                    </button>
+                                    <AddToCartButton productId={item._id} variant="icon" />
                                 </div>
                             </div>
                         </div>

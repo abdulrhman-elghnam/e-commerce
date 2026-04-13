@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/carousel'
 import { Data } from './interface';
 import ProductGallery from './ProductGallery';
+import WishlistButton from './WishlistButton';
+import AddToCartButton from '@/components/layout/shared/AddToCartButton';
 
 export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -114,9 +116,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
 
                         {/* Primary Actions */}
                         <div className="flex flex-col sm:flex-row gap-4 mb-5">
-                            <Button className="flex-1 h-14 bg-[#16A34A] text-white rounded-xl shadow-lg shadow-green-600/20 gap-3 font-semibold text-base hover:bg-[#10833a] hover:shadow-green-700/30">
-                                <ShoppingCart size={20} strokeWidth={2.5} /> Add to Cart
-                            </Button>
+                            <AddToCartButton productId={item?._id || item?.id || ''} />
                             <Button className="flex-1 h-14 bg-[#101828] text-white rounded-xl shadow-lg shadow-gray-900/20 gap-3 font-semibold text-base hover:bg-gray-800">
                                 <Zap size={20} strokeWidth={2.5} /> Buy Now
                             </Button>
@@ -124,9 +124,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
 
                         {/* Secondary Actions */}
                         <div className="flex items-center gap-4 mb-8">
-                            <Button variant="outline" className="flex-1 h-[52px] border-2 border-[#E5E7EB] rounded-xl gap-3 font-semibold text-[#364153] hover:bg-gray-50 hover:text-[#364153]">
-                                <Heart size={18} strokeWidth={2.5} /> Add to Wishlist
-                            </Button>
+                            <WishlistButton productId={item?._id || item?.id || ''} />
                             <Button variant="outline" size="icon" className="w-[56px] h-[52px] shrink-0 border-2 border-[#E5E7EB] rounded-xl text-[#364153] hover:bg-gray-50 hover:text-[#364153]">
                                 <ArrowLeftRight size={18} strokeWidth={2.5} />
                             </Button>

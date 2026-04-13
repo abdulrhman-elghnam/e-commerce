@@ -1,9 +1,16 @@
+"use client"
+
 import Link from "next/link"
+import { useSession, signOut } from "next-auth/react"
 import { FaGift, FaPhone, FaTruck } from "react-icons/fa"
-import { FiLogOut, FiUser } from "react-icons/fi"
+import { FiLogIn, FiLogOut, FiUser } from "react-icons/fi"
 import { MdOutlineEmail } from "react-icons/md"
 
 export default function NavbarTopSide() {
+    const { data: session, status } = useSession()
+    const isAuthenticated = status === "authenticated"
+    const userName = session?.user?.name || "User"
+
     return (
         <div className="hidden h-[41px] z-20 relative w-full border-b bg-[#F9FAFB] text-sm text-[#6A7282] lg:block">
             <div className="app-container flex h-10 items-center justify-between">
@@ -32,16 +39,33 @@ export default function NavbarTopSide() {
 
                     <span className="h-4 w-px bg-[#E5E7EB]" />
 
-                    <div className="flex items-center gap-4 text-[#4A5565]">
-                        <button type="button" className="flex items-center gap-2 hover:text-[#16A34A]">
-                            <FiUser />
-                            <span className="font-medium">Usama</span>
-                        </button>
-                        <button type="button" className="flex items-center gap-2 hover:text-[#16A34A]">
-                            <FiLogOut />
-                            <span className="font-medium">Sign Out</span>
-                        </button>
-                    </div>
+                    {isAuthenticated ? (
+                        <div className="flex items-center gap-4 text-[#4A5565]">
+                            <Link href="/account" className="flex items-center gap-2 hover:text-[#16A34A]">
+                                <FiUser />
+                                <span className="font-medium">{userName}</span>
+                            </Link>
+                            <button
+                                type="button"
+                                onClick={() => signOut({ callbackUrl: "/" })}
+                                className="flex items-center gap-2 hover:text-[#16A34A]"
+                            >
+                                <FiLogOut />
+                                <span className="font-medium">Sign Out</span>
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-4 text-[#4A5565]">
+                            <Link href="/signin" className="flex items-center gap-2 hover:text-[#16A34A]">
+                                <FiLogIn />
+                                <span className="font-medium">Sign In</span>
+                            </Link>
+                            <Link href="/signup" className="flex items-center gap-2 hover:text-[#16A34A]">
+                                <FiUser />
+                                <span className="font-medium">Sign Up</span>
+                            </Link>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

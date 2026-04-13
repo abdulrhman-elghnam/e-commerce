@@ -1,53 +1,60 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Heart, ShoppingCart, Trash2, ArrowLeft } from 'lucide-react';
-
-const wishlistItems = [
-  {
-    id: 1,
-    name: "Hoops 3.0 Low Classic Vintage Shoes",
-    category: "Men's Fashion",
-    price: "1,629 EGP",
-    originalPrice: null,
-    inStock: true
-  },
-  {
-    id: 2,
-    name: "Galaxy 6 Running Shoes",
-    category: "Men's Fashion",
-    price: "1,629 EGP",
-    originalPrice: null,
-    inStock: true
-  },
-  {
-    id: 3,
-    name: "Victus 16-D1016Ne Laptop With 16-Inch Display Core I7-12700H Processor 16Gb Ram 1Tb Nvidia Geforce Rtx3050 Ti Graphics English/Arabic Ceramic White",
-    category: "Electronics",
-    price: "42,960 EGP",
-    originalPrice: null,
-    inStock: true
-  },
-  {
-    id: 4,
-    name: "Duramo 10 Running Shoes",
-    category: "Men's Fashion",
-    price: "1,314 EGP",
-    originalPrice: "1,999 EGP",
-    inStock: true
-  },
-  {
-    id: 5,
-    name: "Woman Shawl",
-    category: "Women's Fashion",
-    price: "149 EGP",
-    originalPrice: null,
-    inStock: true
-  }
-];
+import Image from 'next/image';
+import { useSession } from 'next-auth/react';
+import { toast } from 'sonner';
+import { Heart, ShoppingCart, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
+import { getWishlist, removeFromWishlist } from '@/lib/services/wishlistService';
+import { useDispatch } from 'react-redux';
+import { setWishlistCount, decrementWishlist } from '@/lib/redux/slices/wishlistSlice';
 
 export default function WishlistPage() {
+  const { data: session, status } = useSession();
+  const dispatch = useDispatch();
+  const [items, setItems] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.token) {
+      loadWishlist();
+    } else if (status === "unauthenticated") {
+      setIsLoading(false);
+    }
+  }, [status, session]);
+
+  const loadWishlist = async () => {
+    try {
+      setIsLoading(true);
+      const res = await getWishlist(session!.user!.token);
+      setItems(res.data || []);
+      if (res.data) {
+        dispatch(setWishlistCount(res.data.length));
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to load wishlist");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRemove = async (productId: string) => {
+    if (!session?.user?.token) return;
+    try {
+      await removeFromWishlist(session.user.token, productId);
+      toast.success("Product removed from wishlist");
+      setItems(prev => prev.filter(item => item._id !== productId));
+      dispatch(decrementWishlist());
+    } catch (err: any) {
+      toast.error(err.message || "Failed to remove item");
+    }
+  };
+
+  const handleAddToCart = (item: any) => {
+    // Assuming integration with addToCart API here
+    toast.success("Added to cart");
+  };
   return (
     <div className="min-h-screen bg-[rgba(249,250,251,0.5)] flex flex-col font-['Exo'] pt-[40px] md:pt-[113px] relative pb-[120px]">
       
@@ -70,7 +77,7 @@ export default function WishlistPage() {
                 My Wishlist
               </h1>
               <p className="text-[14px] font-medium leading-[20px] text-[#6A7282]">
-                {wishlistItems.length} items saved
+                {isLoading ? "Loading..." : `${items.length} items saved`}
               </p>
             </div>
           </div>
@@ -103,27 +110,45 @@ export default function WishlistPage() {
               </div>
 
               {/* Table Body */}
-              <div className="flex flex-col divide-y divide-[#F3F4F6]">
-                {wishlistItems.map((item) => (
-                  <div key={item.id} className="grid grid-cols-12 gap-4 items-center px-6 py-5 hover:bg-gray-50/50 transition-colors">
+              <div className="flex flex-col divide-y divide-[#F3F4F6] relative min-h-[200px]">
+                
+                {isLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10">
+                    <Loader2 className="w-8 h-8 animate-spin text-[#16A34A]" />
+                  </div>
+                )}
+                
+                {!isLoading && items.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-16 gap-4">
+                    <Heart className="w-12 h-12 text-[#99A1AF]" />
+                    <p className="text-[16px] text-[#6A7282] font-medium">Your wishlist is empty</p>
+                  </div>
+                )}
+
+                {items.map((item) => (
+                  <div key={item._id} className="grid grid-cols-12 gap-4 items-center px-6 py-5 hover:bg-gray-50/50 transition-colors">
                     
                     {/* Product Details - Col span 6 */}
                     <div className="col-span-6 flex items-center gap-4 pr-4">
                       {/* Product Image Placeholder */}
-                      <Link href={`/product/${item.id}`} className="w-[80px] h-[80px] shrink-0 bg-[#F9FAFB] border border-[#F3F4F6] rounded-xl flex items-center justify-center overflow-hidden hover:opacity-90 transition-opacity">
-                        <span className="text-xs text-gray-400 font-medium">Img</span>
+                      <Link href={`/product/${item._id}`} className="relative w-[80px] h-[80px] shrink-0 bg-[#F9FAFB] border border-[#F3F4F6] rounded-xl flex items-center justify-center overflow-hidden hover:opacity-90 transition-opacity">
+                        {item.imageCover ? (
+                          <Image src={item.imageCover} alt={item.title} fill className="object-cover" />
+                        ) : (
+                          <span className="text-xs text-gray-400 font-medium">Img</span>
+                        )}
                       </Link>
                       
                       <div className="flex flex-col gap-1 min-w-0">
                         <Link 
-                          href={`/product/${item.id}`} 
+                          href={`/product/${item._id}`} 
                           className="text-[#101828] text-[16px] font-medium leading-[24px] hover:text-[#16A34A] transition-colors truncate"
-                          title={item.name}
+                          title={item.title}
                         >
-                          {item.name}
+                          {item.title}
                         </Link>
                         <p className="text-[#99A1AF] text-[14px] font-medium leading-[20px]">
-                          {item.category}
+                          {item.category?.name || "Category"}
                         </p>
                       </div>
                     </div>
@@ -131,18 +156,13 @@ export default function WishlistPage() {
                     {/* Price - Col span 2 */}
                     <div className="col-span-2 flex flex-col justify-center items-center text-center px-2">
                       <div className="text-[#101828] text-[16px] font-semibold leading-[24px]">
-                        {item.price}
+                        {item.price} EGP
                       </div>
-                      {item.originalPrice && (
-                        <div className="text-[#99A1AF] text-[14px] font-medium leading-[20px] line-through mt-0.5">
-                          {item.originalPrice}
-                        </div>
-                      )}
                     </div>
 
                     {/* Status - Col span 2 */}
                     <div className="col-span-2 flex justify-center items-center px-2">
-                      {item.inStock ? (
+                      {item.quantity > 0 ? (
                         <span className="inline-flex items-center justify-center gap-1.5 px-3 py-1 bg-[#F0FDF4] rounded-full shrink-0">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#00C950]"></span>
                           <span className="text-[#008236] text-[12px] font-medium leading-[16px] whitespace-nowrap">
@@ -161,11 +181,17 @@ export default function WishlistPage() {
 
                     {/* Actions - Col span 2 */}
                     <div className="col-span-2 flex items-center justify-center gap-2 pl-2">
-                      <button className="flex-1 flex items-center justify-center gap-2 h-10 px-2 sm:px-4 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-lg transition-colors shadow-sm min-w-[120px]">
+                      <button 
+                        onClick={() => handleAddToCart(item)}
+                        className="flex-1 flex items-center justify-center gap-2 h-10 px-2 sm:px-4 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-lg transition-colors shadow-sm min-w-[120px]"
+                      >
                         <ShoppingCart className="w-[15px] h-[15px]" />
                         <span className="text-[14px] font-medium leading-[20px] whitespace-nowrap">Add to Cart</span>
                       </button>
-                      <button className="w-10 h-10 shrink-0 flex items-center justify-center text-[#99A1AF] hover:text-red-500 bg-white border border-[#E5E7EB] hover:border-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                      <button 
+                        onClick={() => handleRemove(item._id)}
+                        className="w-10 h-10 shrink-0 flex items-center justify-center text-[#99A1AF] hover:text-red-500 bg-white border border-[#E5E7EB] hover:border-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      >
                         <Trash2 className="w-[18px] h-[18px]" />
                       </button>
                     </div>

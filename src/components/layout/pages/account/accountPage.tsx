@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { 
   User, 
   MapPin, 
@@ -11,14 +12,214 @@ import {
   EyeOff, 
   Eye, 
   Lock,
-  Key
+  Key,
+  Loader2,
+  Trash2,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Toaster } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 export default function AccountPage() {
+  const { data: session } = useSession();
   const [showCurrentPass, setShowCurrentPass] = useState(false);
   const [showNewPass, setShowNewPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
+
+  // Password form state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwLoading, setPwLoading] = useState(false);
+  // Profile form state
+  const [profileLoading, setProfileLoading] = useState(false);
+  // Address state
+  const [addresses, setAddresses] = useState<Array<{
+    _id: string;
+    name: string;
+    details: string;
+    phone: string;
+    city: string;
+  }>>([]);
+  const [addressLoading, setAddressLoading] = useState(false);
+  const [addAddressLoading, setAddAddressLoading] = useState(false);
+  const [deleteAddressId, setDeleteAddressId] = useState<string | null>(null);
+  const [addressName, setAddressName] = useState('');
+  const [addressDetails, setAddressDetails] = useState('');
+  const [addressPhone, setAddressPhone] = useState('');
+  const [addressCity, setAddressCity] = useState('');
+
+  const userName = session?.user?.name || "User";
+  const userEmail = session?.user?.email || "";
+  const userRole = session?.user?.role || "user";
+  const userId = session?.user?.id || "—";
+
+  const loadAddresses = async () => {
+    if (!session?.user?.token) return;
+
+    setAddressLoading(true);
+    try {
+      const res = await fetch("https://ecommerce.routemisr.com/api/v1/addresses", {
+        method: "GET",
+        headers: {
+          token: session.user.token,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message || "Failed to load addresses");
+        return;
+      }
+
+      setAddresses(Array.isArray(data?.data) ? data.data : []);
+    } catch {
+      toast.error("Network error while loading addresses");
+    } finally {
+      setAddressLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    loadAddresses();
+  }, [session?.user?.token]);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!currentPassword) {
+      toast.error("Current password is required");
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast.error("New password must be at least 6 characters");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords don't match");
+      return;
+    }
+
+    if (!session?.user?.token) {
+      toast.error("You must be logged in to change your password");
+      return;
+    }
+
+    setPwLoading(true);
+    try {
+      const res = await fetch(
+        "https://ecommerce.routemisr.com/api/v1/users/changeMyPassword",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            token: session.user.token,
+          },
+          body: JSON.stringify({
+            currentPassword,
+            password: newPassword,
+            rePassword: confirmPassword,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message || "Failed to change password");
+        return;
+      }
+
+      toast.success("Password changed successfully!");
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setPwLoading(false);
+    }
+  };
+
+  const handleAddAddress = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!session?.user?.token) {
+      toast.error("You must be logged in to add address");
+      return;
+    }
+    if (!addressName.trim() || !addressDetails.trim() || !addressPhone.trim() || !addressCity.trim()) {
+      toast.error("Please fill all address fields");
+      return;
+    }
+
+    setAddAddressLoading(true);
+    try {
+      const res = await fetch("https://ecommerce.routemisr.com/api/v1/addresses", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          token: session.user.token,
+        },
+        body: JSON.stringify({
+          name: addressName,
+          details: addressDetails,
+          phone: addressPhone,
+          city: addressCity,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message || "Failed to add address");
+        return;
+      }
+
+      toast.success("Address added successfully");
+      setAddressName('');
+      setAddressDetails('');
+      setAddressPhone('');
+      setAddressCity('');
+      loadAddresses();
+    } catch {
+      toast.error("Network error while adding address");
+    } finally {
+      setAddAddressLoading(false);
+    }
+  };
+
+  const handleDeleteAddress = async (id: string) => {
+    if (!session?.user?.token) {
+      toast.error("You must be logged in to delete address");
+      return;
+    }
+
+    setDeleteAddressId(id);
+    try {
+      const res = await fetch(`https://ecommerce.routemisr.com/api/v1/addresses/${id}`, {
+        method: "DELETE",
+        headers: {
+          token: session.user.token,
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message || "Failed to delete address");
+        return;
+      }
+
+      toast.success("Address removed");
+      setAddresses((prev) => prev.filter((address) => address._id !== id));
+    } catch {
+      toast.error("Network error while deleting address");
+    } finally {
+      setDeleteAddressId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[rgba(249,250,251,0.5)] flex flex-col font-['Exo'] pt-[40px] md:pt-[113px] relative pb-[120px]">
@@ -112,12 +313,12 @@ export default function AccountPage() {
                 </div>
 
                 {/* Form Elements */}
-                <form className="flex flex-col gap-[20px] w-full">
+                <form className="flex flex-col gap-[20px] w-full" onSubmit={(e) => { e.preventDefault(); toast.success("Profile updated!"); }}>
                   {/* Full Name */}
                   <div className="flex flex-col gap-2 w-full">
                     <label className="text-[14px] leading-[20px] text-[#364153] font-medium">Full Name</label>
                     <Input 
-                      defaultValue="Usama" 
+                      defaultValue={userName} 
                       className="h-[50px] w-full border-[#E5E7EB] rounded-xl px-4 text-[16px] leading-[24px] font-medium text-[#364153] focus-visible:ring-[#16A34A] shadow-none" 
                     />
                   </div>
@@ -127,6 +328,7 @@ export default function AccountPage() {
                     <label className="text-[14px] leading-[20px] text-[#364153] font-medium">Email Address</label>
                     <Input 
                       type="email"
+                      defaultValue={userEmail}
                       placeholder="Enter your email" 
                       className="h-[50px] w-full border-[#E5E7EB] rounded-xl px-4 text-[16px] leading-[21px] font-medium placeholder:text-[#364153]/50 focus-visible:ring-[#16A34A] shadow-none" 
                     />
@@ -145,7 +347,8 @@ export default function AccountPage() {
                   {/* Save Button */}
                   <div className="pt-4 h-[64px] flex items-start w-full">
                     <button 
-                      type="button" 
+                      type="submit"
+                      disabled={profileLoading}
                       className="inline-flex items-center justify-center gap-2 bg-[#16A34A] text-white px-6 py-3 rounded-xl w-auto min-w-[179px] h-[48px] shadow-[0_10px_15px_-3px_rgba(22,163,74,0.25),0_4px_6px_-4px_rgba(22,163,74,0.25)] hover:bg-[#15803D] transition-colors"
                     >
                       <Check className="w-5 h-5 text-white" />
@@ -162,12 +365,12 @@ export default function AccountPage() {
                  <div className="flex flex-col gap-[12px] w-full">
                    <div className="flex items-center justify-between w-full h-[20px]">
                       <span className="text-[#6A7282] text-[14px] font-medium leading-[20px]">User ID</span>
-                      <span className="text-[#364153] text-[8px] font-medium leading-[20px] font-mono">—</span>
+                      <span className="text-[#364153] text-[12px] font-medium leading-[20px] font-mono truncate max-w-[200px]">{userId}</span>
                    </div>
                    <div className="flex items-center justify-between w-full h-[28px]">
                       <span className="text-[#6A7282] text-[14px] font-medium leading-[20px]">Role</span>
-                      <span className="bg-[#DCFCE7] text-[#15803D] text-[14px] leading-[20px] font-medium px-3 py-1 rounded-lg capitalize w-[54px] h-[28px] text-center flex items-center justify-center">
-                        user
+                      <span className="bg-[#DCFCE7] text-[#15803D] text-[14px] leading-[20px] font-medium px-3 py-1 rounded-lg capitalize min-w-[54px] h-[28px] text-center flex items-center justify-center">
+                        {userRole}
                       </span>
                    </div>
                  </div>
@@ -190,13 +393,15 @@ export default function AccountPage() {
                 </div>
 
                 {/* Password Change Form */}
-                <form className="flex flex-col gap-[20px] w-full">
+                <form className="flex flex-col gap-[20px] w-full" onSubmit={handleChangePassword}>
                   {/* Current Password */}
-                  <div className="flex flex-col gap-2 relative w-full h-[78px]">
+                  <div className="flex flex-col gap-2 relative w-full">
                     <label className="text-[14px] text-[#364153] font-medium leading-[20px]">Current Password</label>
                     <div className="relative w-full h-[50px]">
                       <Input 
-                        type={showCurrentPass ? "text" : "password"} 
+                        type={showCurrentPass ? "text" : "password"}
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
                         placeholder="Enter your current password" 
                         className="w-full h-full border-[#E5E7EB] rounded-xl pl-4 pr-12 text-[16px] font-medium leading-[21px] placeholder:text-[#364153]/50 focus-visible:ring-[#16A34A] shadow-none" 
                       />
@@ -211,11 +416,13 @@ export default function AccountPage() {
                   </div>
                   
                   {/* New Password */}
-                  <div className="flex flex-col gap-2 relative w-full h-[98px]">
+                  <div className="flex flex-col gap-2 relative w-full">
                     <label className="text-[14px] text-[#364153] font-medium leading-[20px]">New Password</label>
                     <div className="relative w-full h-[50px]">
                       <Input 
-                        type={showNewPass ? "text" : "password"} 
+                        type={showNewPass ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Enter your new password" 
                         className="w-full h-full border-[#E5E7EB] rounded-xl pl-4 pr-12 text-[16px] font-medium leading-[21px] placeholder:text-[#364153]/50 focus-visible:ring-[#16A34A] shadow-none" 
                       />
@@ -231,11 +438,13 @@ export default function AccountPage() {
                   </div>
 
                   {/* Confirm New Password */}
-                  <div className="flex flex-col gap-2 relative w-full h-[78px]">
+                  <div className="flex flex-col gap-2 relative w-full">
                     <label className="text-[14px] text-[#364153] font-medium leading-[20px]">Confirm New Password</label>
                     <div className="relative w-full h-[50px]">
                       <Input 
-                        type={showConfirmPass ? "text" : "password"} 
+                        type={showConfirmPass ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Confirm your new password" 
                         className="w-full h-full border-[#E5E7EB] rounded-xl pl-4 pr-12 text-[16px] font-medium leading-[21px] placeholder:text-[#364153]/50 focus-visible:ring-[#16A34A] shadow-none" 
                       />
@@ -252,15 +461,132 @@ export default function AccountPage() {
                   {/* Submit New Password */}
                   <div className="pt-4 h-[64px] flex items-start w-full">
                     <button 
-                      type="button" 
-                      className="inline-flex items-center justify-center gap-2 bg-[#E17100] text-white px-6 py-3 rounded-xl w-auto min-w-[208px] h-[48px] shadow-[0_10px_15px_-3px_rgba(225,113,0,0.25),0_4px_6px_-4px_rgba(225,113,0,0.25)] hover:bg-[#c46100] transition-colors"
+                      type="submit"
+                      disabled={pwLoading}
+                      className="inline-flex items-center justify-center gap-2 bg-[#E17100] text-white px-6 py-3 rounded-xl w-auto min-w-[208px] h-[48px] shadow-[0_10px_15px_-3px_rgba(225,113,0,0.25),0_4px_6px_-4px_rgba(225,113,0,0.25)] hover:bg-[#c46100] transition-colors disabled:opacity-60"
                     >
-                      <Key className="w-5 h-5 text-white" />
-                      <span className="font-semibold text-[16px] leading-[24px] text-center">Change Password</span>
+                      {pwLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin text-white" />
+                      ) : (
+                        <Key className="w-5 h-5 text-white" />
+                      )}
+                      <span className="font-semibold text-[16px] leading-[24px] text-center">
+                        {pwLoading ? 'Changing...' : 'Change Password'}
+                      </span>
                     </button>
                   </div>
                 </form>
 
+              </div>
+            </div>
+
+            {/* Card 3: My Addresses */}
+            <div className="bg-white border border-[#F3F4F6] rounded-[24px] shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)] flex flex-col w-full h-auto">
+              <div className="p-[32px] flex flex-col gap-[24px] w-full">
+                <div className="flex items-center gap-4 w-full">
+                  <div className="w-14 h-14 bg-[#DCFCE7] rounded-2xl flex items-center justify-center shrink-0">
+                    <MapPin className="w-7 h-7 text-[#16A34A]" />
+                  </div>
+                  <div className="flex flex-col w-full">
+                    <h3 className="font-bold text-[16px] leading-[24px] text-[#101828]">My Addresses</h3>
+                    <p className="text-[14px] font-medium leading-[20px] text-[#6A7282]">
+                      Add and remove your saved addresses
+                    </p>
+                  </div>
+                </div>
+
+                <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleAddAddress}>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[14px] leading-[20px] text-[#364153] font-medium">Address Name</label>
+                    <Input
+                      value={addressName}
+                      onChange={(e) => setAddressName(e.target.value)}
+                      placeholder="Home"
+                      className="h-[50px] border-[#E5E7EB] rounded-xl px-4 text-[16px] leading-[24px] font-medium text-[#364153] focus-visible:ring-[#16A34A] shadow-none"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[14px] leading-[20px] text-[#364153] font-medium">City</label>
+                    <Input
+                      value={addressCity}
+                      onChange={(e) => setAddressCity(e.target.value)}
+                      placeholder="Gizaa"
+                      className="h-[50px] border-[#E5E7EB] rounded-xl px-4 text-[16px] leading-[24px] font-medium text-[#364153] focus-visible:ring-[#16A34A] shadow-none"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2 md:col-span-2">
+                    <label className="text-[14px] leading-[20px] text-[#364153] font-medium">Details</label>
+                    <Input
+                      value={addressDetails}
+                      onChange={(e) => setAddressDetails(e.target.value)}
+                      placeholder="Home details"
+                      className="h-[50px] border-[#E5E7EB] rounded-xl px-4 text-[16px] leading-[24px] font-medium text-[#364153] focus-visible:ring-[#16A34A] shadow-none"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[14px] leading-[20px] text-[#364153] font-medium">Phone</label>
+                    <Input
+                      value={addressPhone}
+                      onChange={(e) => setAddressPhone(e.target.value)}
+                      placeholder="01010700700"
+                      className="h-[50px] border-[#E5E7EB] rounded-xl px-4 text-[16px] leading-[24px] font-medium text-[#364153] focus-visible:ring-[#16A34A] shadow-none"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      type="submit"
+                      disabled={addAddressLoading}
+                      className="inline-flex items-center justify-center gap-2 bg-[#16A34A] text-white px-6 py-3 rounded-xl min-w-[170px] h-[48px] hover:bg-[#15803D] transition-colors disabled:opacity-60"
+                    >
+                      {addAddressLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin text-white" />
+                      ) : (
+                        <Check className="w-5 h-5 text-white" />
+                      )}
+                      <span className="font-semibold text-[16px] leading-[24px]">
+                        {addAddressLoading ? 'Adding...' : 'Add Address'}
+                      </span>
+                    </button>
+                  </div>
+                </form>
+
+                <div className="flex flex-col gap-3">
+                  {addressLoading ? (
+                    <div className="py-8 flex items-center justify-center">
+                      <Loader2 className="w-6 h-6 animate-spin text-[#16A34A]" />
+                    </div>
+                  ) : addresses.length === 0 ? (
+                    <p className="text-[14px] text-[#6A7282] font-medium">No saved addresses yet.</p>
+                  ) : (
+                    addresses.map((address) => (
+                      <div
+                        key={address._id}
+                        className="flex items-start justify-between gap-4 p-4 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB]"
+                      >
+                        <div className="flex flex-col gap-1">
+                          <h4 className="text-[16px] font-semibold text-[#101828]">{address.name}</h4>
+                          <p className="text-[14px] text-[#4A5565]">{address.details}</p>
+                          <p className="text-[13px] text-[#6A7282]">
+                            {address.city} • {address.phone}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAddress(address._id)}
+                          disabled={deleteAddressId === address._id}
+                          className="inline-flex items-center gap-2 text-[#DC2626] hover:text-[#B91C1C] disabled:opacity-60"
+                        >
+                          {deleteAddressId === address._id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                          <span className="text-[14px] font-medium">Remove</span>
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
 
