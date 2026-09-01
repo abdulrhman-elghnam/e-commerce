@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import { useDispatch } from 'react-redux';
 import { setCartCount } from '@/lib/redux/slices/cartSlice';
-import { getCart, clearCart, applyCoupon, updateCartQuantity } from '@/lib/services/cartService';
+import { getCart, clearCart, applyCoupon, updateCartQuantity, removeCartItem } from '@/lib/services/cartService';
 import { 
   ShoppingCart, 
   Check, 
@@ -119,8 +119,7 @@ export default function CartPage() {
   const handleRemoveItem = async (productId: string) => {
     if (!session?.user?.token) return;
     try {
-      // Remove by setting count to 0 — the API treats this as removal
-      await updateCartQuantity(session.user.token, productId, 0);
+      await removeCartItem(session.user.token, productId);
       setItems(prev => {
         const updated = prev.filter(ci => ci.product._id !== productId);
         dispatch(setCartCount(updated.length));

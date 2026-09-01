@@ -1,4 +1,4 @@
-const API_BASE = "https://ecommerce.routemisr.com/api/v2";
+const API_BASE = process.env.NEXT_PUBLIC_API_V2_URL || "https://ecommerce.routemisr.com/api/v2";
 
 // ---------- Get Logged User Cart ----------
 export async function getCart(token: string) {
@@ -54,6 +54,13 @@ export async function updateCartQuantity(token: string, productId: string, count
   }
 
   return res.json();
+}
+
+export async function removeCartItem(token: string, productId: string) {
+  const res = await fetch(`${API_BASE}/cart/${productId}`, { method: "DELETE", headers: { token } });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Failed to remove item from cart");
+  return data;
 }
 
 // ---------- Clear User Cart ----------

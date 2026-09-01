@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-const API_BASE = "https://ecommerce.routemisr.com/api/v1";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://ecommerce.routemisr.com/api/v1";
 
 // Shared authenticated fetch helper
 async function authFetch(url: string, options: RequestInit = {}) {
@@ -58,4 +58,11 @@ export async function createCheckoutSession(
   }
 
   return res.json();
+}
+
+export async function createCashOrder(token: string, cartId: string, shippingAddress: ShippingAddress) {
+  const res = await fetch(`${API_BASE}/orders/${cartId}`, { method: "POST", headers: { "Content-Type": "application/json", token }, body: JSON.stringify({ shippingAddress }) });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Could not place the order");
+  return data;
 }

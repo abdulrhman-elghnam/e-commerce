@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { createCashOrder } from "@/lib/services/ordersService";
 
 const checkoutSchema = z.object({
   details: z.string().min(5, "Please enter a valid address (min 5 chars)"),
@@ -40,6 +41,7 @@ export default function CheckoutForm({ cartId, subtotal, itemCount }: CheckoutFo
   const { data: session } = useSession();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "cash">("card");
 
   const {
     register,
@@ -63,6 +65,18 @@ export default function CheckoutForm({ cartId, subtotal, itemCount }: CheckoutFo
     setIsLoading(true);
 
     try {
+      const shippingAddress = {
+        details: values.details,
+        phone: values.phone,
+        city: values.city,
+      };
+      if (paymentMethod === "cash") {
+        await createCashOrder(session.user.token, cartId, shippingAddress);
+        toast.success("Order placed successfully!");
+        router.push("/orders/allorders");
+        return;
+      }
+
       const returnUrl =
         typeof window !== "undefined"
           ? `${window.location.origin}/orders/allorders`
@@ -77,11 +91,7 @@ export default function CheckoutForm({ cartId, subtotal, itemCount }: CheckoutFo
             token: session.user.token,
           },
           body: JSON.stringify({
-            shippingAddress: {
-              details: values.details,
-              phone: values.phone,
-              city: values.city,
-            },
+            shippingAddress,
           }),
         }
       );
@@ -120,6 +130,18 @@ export default function CheckoutForm({ cartId, subtotal, itemCount }: CheckoutFo
           <p className="text-[13px] font-medium text-[#6A7282] leading-[20px]">Where should we deliver?</p>
         </div>
       </div>
+
+      <fieldset className="flex flex-col gap-3 border-t border-dashed border-[#E5E7EB] pt-5">
+        <legend className="text-[14px] font-semibold text-[#364153]">Payment method</legend>
+        <label className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition ${paymentMethod === "card" ? "border-[#16A34A] bg-[#F0FDF4]" : "border-[#E5E7EB] bg-white"}`}>
+          <span><span className="block text-sm font-semibold text-[#101828]">Card payment</span><span className="text-xs text-[#6A7282]">Securely pay through Stripe</span></span>
+          <input type="radio" name="payment" checked={paymentMethod === "card"} onChange={() => setPaymentMethod("card")} className="accent-[#16A34A]" />
+        </label>
+        <label className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition ${paymentMethod === "cash" ? "border-[#16A34A] bg-[#F0FDF4]" : "border-[#E5E7EB] bg-white"}`}>
+          <span><span className="block text-sm font-semibold text-[#101828]">Cash on delivery</span><span className="text-xs text-[#6A7282]">Pay when your order arrives</span></span>
+          <input type="radio" name="payment" checked={paymentMethod === "cash"} onChange={() => setPaymentMethod("cash")} className="accent-[#16A34A]" />
+        </label>
+      </fieldset>
 
       {/* Address Details */}
       <div className="flex flex-col gap-2">
@@ -212,7 +234,7 @@ export default function CheckoutForm({ cartId, subtotal, itemCount }: CheckoutFo
         ) : (
           <span className="flex items-center gap-2">
             <Lock className="w-5 h-5" />
-            Confirm & Pay
+            {paymentMethod === "cash" ? "Place cash order" : "Confirm & Pay"}
           </span>
         )}
       </Button>

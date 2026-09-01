@@ -2,6 +2,8 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { BiCategory } from "react-icons/bi"
 import { FiHeadphones, FiHeart, FiLogIn, FiLogOut, FiMenu, FiSearch, FiShoppingCart, FiUser, FiX } from "react-icons/fi"
@@ -22,11 +24,18 @@ const categoryItems = [
 ]
 
 export default function NavbarDownSide() {
+    const router = useRouter()
+    const [search, setSearch] = useState("")
     const { data: session, status } = useSession()
     const isAuthenticated = status === "authenticated"
     const userName = session?.user?.name || "User"
     const wishlistCount = useSelector((state: RootState) => state.wishlist.count)
     const cartCount = useSelector((state: RootState) => state.cart.count)
+    const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault()
+        const keyword = search.trim()
+        router.push(keyword ? `/shop?keyword=${encodeURIComponent(keyword)}` : "/shop")
+    }
 
     return (
         <div className="w-full bg-white sticky z-[50] top-0 border-b border-[#F3F4F6] shadow-sm">
@@ -35,9 +44,11 @@ export default function NavbarDownSide() {
                     <Image src={freshcartLogo} alt="FreshCart" priority className="h-8 w-auto" />
                 </Link>
 
-                <form className="relative hidden max-w-[672px] flex-1 lg:block">
+                <form onSubmit={submitSearch} className="relative hidden max-w-[672px] flex-1 lg:block">
                     <Input
                         type="text"
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
                         placeholder="Search for products, brands and more..."
                         className="h-[46px] rounded-full border-[#E5E7EB] bg-[#F9FAFB80] pr-14 pl-5 shadow-none placeholder:text-[#36415380]"
                     />
@@ -162,10 +173,12 @@ export default function NavbarDownSide() {
                                 </SheetClose>
                             </div>
 
-                            <form className="p-4">
+                            <form onSubmit={submitSearch} className="p-4">
                                 <div className="relative">
                                     <Input
                                         type="text"
+                                        value={search}
+                                        onChange={(event) => setSearch(event.target.value)}
                                         placeholder="Search products..."
                                         className="h-[46px] rounded-xl border-[#E5E7EB] bg-[#F9FAFB] pr-12 pl-4 placeholder:text-[#36415380]"
                                     />

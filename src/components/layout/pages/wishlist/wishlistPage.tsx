@@ -9,6 +9,8 @@ import { Heart, ShoppingCart, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import { getWishlist, removeFromWishlist } from '@/lib/services/wishlistService';
 import { useDispatch } from 'react-redux';
 import { setWishlistCount, decrementWishlist } from '@/lib/redux/slices/wishlistSlice';
+import { addToCart } from '@/lib/services/cartService';
+import { incrementCart } from '@/lib/redux/slices/cartSlice';
 
 export default function WishlistPage() {
   const { data: session, status } = useSession();
@@ -51,9 +53,15 @@ export default function WishlistPage() {
     }
   };
 
-  const handleAddToCart = (item: any) => {
-    // Assuming integration with addToCart API here
-    toast.success("Added to cart");
+  const handleAddToCart = async (item: any) => {
+    if (!session?.user?.token) return toast.error("Please sign in to add items to cart");
+    try {
+      await addToCart(session.user.token, item._id);
+      dispatch(incrementCart());
+      toast.success("Added to cart");
+    } catch (err: any) {
+      toast.error(err.message || "Could not add item to cart");
+    }
   };
   return (
     <div className="min-h-screen bg-[rgba(249,250,251,0.5)] flex flex-col font-['Exo'] pt-[40px] md:pt-[113px] relative pb-[120px]">
@@ -131,7 +139,7 @@ export default function WishlistPage() {
                     {/* Product Details - Col span 6 */}
                     <div className="col-span-6 flex items-center gap-4 pr-4">
                       {/* Product Image Placeholder */}
-                      <Link href={`/product/${item._id}`} className="relative w-[80px] h-[80px] shrink-0 bg-[#F9FAFB] border border-[#F3F4F6] rounded-xl flex items-center justify-center overflow-hidden hover:opacity-90 transition-opacity">
+                      <Link href={`/categories/${item._id}`} className="relative w-[80px] h-[80px] shrink-0 bg-[#F9FAFB] border border-[#F3F4F6] rounded-xl flex items-center justify-center overflow-hidden hover:opacity-90 transition-opacity">
                         {item.imageCover ? (
                           <Image src={item.imageCover} alt={item.title} fill className="object-cover" />
                         ) : (
@@ -141,7 +149,7 @@ export default function WishlistPage() {
                       
                       <div className="flex flex-col gap-1 min-w-0">
                         <Link 
-                          href={`/product/${item._id}`} 
+                          href={`/categories/${item._id}`} 
                           className="text-[#101828] text-[16px] font-medium leading-[24px] hover:text-[#16A34A] transition-colors truncate"
                           title={item.title}
                         >

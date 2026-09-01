@@ -15,7 +15,8 @@ export const authOptions: AuthOptions = {
         }
 
         try {
-          const res = await fetch("https://ecommerce.routemisr.com/api/v1/auth/signin", {
+          const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://ecommerce.routemisr.com/api/v1";
+          const res = await fetch(`${apiBase}/auth/signin`, {
             method: 'POST',
             headers: {
               "Content-Type": "application/json",
@@ -72,7 +73,7 @@ export const authOptions: AuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET || "default_development_secret_do_not_use_in_prod",
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 const handler = NextAuth(authOptions);

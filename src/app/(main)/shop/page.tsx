@@ -1,11 +1,5 @@
-import React from 'react';
+import ShopPage from "@/components/layout/pages/shop/ShopPage";
 
-const Page = () => {
-    return (
-        <div>
-            shop
-        </div>
-    );
+export default function Page() {
+  return <ShopPage />;
 }
-
-export default Page;

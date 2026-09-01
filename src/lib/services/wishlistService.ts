@@ -1,4 +1,4 @@
-const API_BASE = "https://ecommerce.routemisr.com/api/v1";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://ecommerce.routemisr.com/api/v1"; 
 
 // ---------- Get Logged User Wishlist ----------
 export async function getWishlist(token: string) {

@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
+import { updateProfileAPI } from '@/lib/services/authService';
 
 export default function AccountPage() {
   const { data: session } = useSession();
@@ -139,6 +140,25 @@ export default function AccountPage() {
       toast.error("Network error. Please try again.");
     } finally {
       setPwLoading(false);
+    }
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!session?.user?.token) return toast.error("You must be logged in to update your profile");
+    const fields = new FormData(e.currentTarget);
+    const name = String(fields.get("name") || "").trim();
+    const email = String(fields.get("email") || "").trim();
+    const phone = String(fields.get("phone") || "").trim();
+    if (!name || !email || !phone) return toast.error("Please complete your name, email, and phone number");
+    setProfileLoading(true);
+    try {
+      await updateProfileAPI(session.user.token, { name, email, phone });
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update profile");
+    } finally {
+      setProfileLoading(false);
     }
   };
 
@@ -313,11 +333,12 @@ export default function AccountPage() {
                 </div>
 
                 {/* Form Elements */}
-                <form className="flex flex-col gap-[20px] w-full" onSubmit={(e) => { e.preventDefault(); toast.success("Profile updated!"); }}>
+                <form className="flex flex-col gap-[20px] w-full" onSubmit={handleUpdateProfile}>
                   {/* Full Name */}
                   <div className="flex flex-col gap-2 w-full">
                     <label className="text-[14px] leading-[20px] text-[#364153] font-medium">Full Name</label>
                     <Input 
+                      name="name"
                       defaultValue={userName} 
                       className="h-[50px] w-full border-[#E5E7EB] rounded-xl px-4 text-[16px] leading-[24px] font-medium text-[#364153] focus-visible:ring-[#16A34A] shadow-none" 
                     />
@@ -328,6 +349,7 @@ export default function AccountPage() {
                     <label className="text-[14px] leading-[20px] text-[#364153] font-medium">Email Address</label>
                     <Input 
                       type="email"
+                      name="email"
                       defaultValue={userEmail}
                       placeholder="Enter your email" 
                       className="h-[50px] w-full border-[#E5E7EB] rounded-xl px-4 text-[16px] leading-[21px] font-medium placeholder:text-[#364153]/50 focus-visible:ring-[#16A34A] shadow-none" 
@@ -339,6 +361,7 @@ export default function AccountPage() {
                     <label className="text-[14px] leading-[20px] text-[#364153] font-medium">Phone Number</label>
                     <Input 
                       type="tel"
+                      name="phone"
                       placeholder="01xxxxxxxxx" 
                       className="h-[50px] w-full border-[#E5E7EB] rounded-xl px-4 text-[16px] leading-[21px] font-medium placeholder:text-[#364153]/50 focus-visible:ring-[#16A34A] shadow-none" 
                     />
@@ -351,7 +374,7 @@ export default function AccountPage() {
                       disabled={profileLoading}
                       className="inline-flex items-center justify-center gap-2 bg-[#16A34A] text-white px-6 py-3 rounded-xl w-auto min-w-[179px] h-[48px] shadow-[0_10px_15px_-3px_rgba(22,163,74,0.25),0_4px_6px_-4px_rgba(22,163,74,0.25)] hover:bg-[#15803D] transition-colors"
                     >
-                      <Check className="w-5 h-5 text-white" />
+                      {profileLoading ? <Loader2 className="w-5 h-5 animate-spin text-white" /> : <Check className="w-5 h-5 text-white" />}
                       <span className="font-semibold text-[16px] leading-[24px] text-center">Save Changes</span>
                     </button>
                   </div>

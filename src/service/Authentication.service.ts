@@ -1,4 +1,1 @@
-"use service"
-
-
-
+export * from "@/lib/services/authService";

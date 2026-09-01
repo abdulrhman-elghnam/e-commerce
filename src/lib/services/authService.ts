@@ -1,4 +1,4 @@
-const API_BASE = "https://ecommerce.routemisr.com/api/v1";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://ecommerce.routemisr.com/api/v1";
 
 // ---------- Sign In ----------
 export async function signInAPI(email: string, password: string) {
@@ -83,5 +83,19 @@ export async function changePasswordAPI(
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || "Failed to change password");
+  return data;
+}
+
+export async function updateProfileAPI(token: string, payload: { name: string; email: string; phone: string }) {
+  const res = await fetch(`${API_BASE}/users/updateMe`, { method: "PUT", headers: { "Content-Type": "application/json", token }, body: JSON.stringify(payload) });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to update profile");
+  return data;
+}
+
+export async function verifyTokenAPI(token: string) {
+  const res = await fetch(`${API_BASE}/auth/verifyToken`, { headers: { token } });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Session has expired");
   return data;
 }

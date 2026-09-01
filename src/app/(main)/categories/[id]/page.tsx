@@ -22,11 +22,12 @@ import { Data } from './interface';
 import ProductGallery from './ProductGallery';
 import WishlistButton from './WishlistButton';
 import AddToCartButton from '@/components/layout/shared/AddToCartButton';
+import ReviewsPanel from './ReviewsPanel';
 
 export default async function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    console.log(id);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/products/${id}`);
+    const res = await fetch(`https://ecommerce.routemisr.com/api/v1/products/${id}`, { cache: "no-store" });
+    if (!res.ok) return <section className="app-container py-32 text-center text-slate-600">This product is no longer available.</section>;
     const result = await res.json();
     const item:Data = result.data;
 
@@ -71,7 +72,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
                         <div className="flex items-center gap-3 mb-5">
                             <div className="flex items-center gap-0.5 text-[#FCC800]">
                                 {[...Array(5)].map((_, i) => (
-                                    <Star key={i} size={16} fill="currentColor" stroke="none" />
+                                    <Star key={i} size={16} fill={i < Math.round(item?.ratingsAverage || 0) ? "currentColor" : "none"} className={i < Math.round(item?.ratingsAverage || 0) ? "" : "text-slate-300"} stroke="currentColor" />
                                 ))}
                             </div>
                             <span className="text-sm font-medium text-[#4A5565]">{item?.ratingsAverage || '4.8'} ({item?.ratingsQuantity || '0'} reviews)</span>
@@ -238,7 +239,8 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
                 </CardContent>
             </Card>
 
+            <ReviewsPanel productId={item?._id || item?.id || ''} />
+
         </section>
     )
 }
-
