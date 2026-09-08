@@ -21,7 +21,7 @@ export interface Data {
     createdAt: string
     updatedAt: string
     __v: number
-    reviews: any[]
+    reviews: unknown[]
     id: string
 }
 

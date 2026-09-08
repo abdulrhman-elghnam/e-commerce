@@ -15,9 +15,9 @@ import {
   Key,
   Loader2,
   Trash2,
+  Package,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { updateProfileAPI } from '@/lib/services/authService';
 
@@ -55,15 +55,17 @@ export default function AccountPage() {
   const userRole = session?.user?.role || "user";
   const userId = session?.user?.id || "—";
 
-  const loadAddresses = async () => {
-    if (!session?.user?.token) return;
+  const authToken = session?.user?.token;
+
+  const loadAddresses = React.useCallback(async () => {
+    if (!authToken) return;
 
     setAddressLoading(true);
     try {
       const res = await fetch("https://ecommerce.routemisr.com/api/v1/addresses", {
         method: "GET",
         headers: {
-          token: session.user.token,
+          token: authToken,
         },
       });
 
@@ -80,11 +82,12 @@ export default function AccountPage() {
     } finally {
       setAddressLoading(false);
     }
-  };
+  }, [authToken]);
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAddresses();
-  }, [session?.user?.token]);
+  }, [loadAddresses]);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -283,7 +286,18 @@ export default function AccountPage() {
               </div>
               <ul className="p-2 flex flex-col gap-1">
                 <li>
-                  <Link href="/addresses" className="flex items-center justify-between p-3 gap-3 rounded-xl hover:bg-gray-50 transition-colors group h-[60px]">
+                  <Link href="#settings" className="flex items-center justify-between p-3 gap-3 rounded-xl bg-[#F0FDF4] transition-colors h-[60px]">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-[#22C55E] rounded-lg flex items-center justify-center">
+                        <Settings className="w-[18px] h-[18px] text-white" />
+                      </div>
+                      <span className="font-medium text-[16px] leading-[24px] text-[#15803D]">Settings</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-[#22C55E]" />
+                  </Link>
+                </li>
+                <li>
+                  <Link href="#addresses" className="flex items-center justify-between p-3 gap-3 rounded-xl hover:bg-gray-50 transition-colors group h-[60px]">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 bg-[#F3F4F6] rounded-lg flex items-center justify-center transition-colors">
                         <MapPin className="w-4 h-4 text-[#6A7282]" />
@@ -294,14 +308,14 @@ export default function AccountPage() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/account" className="flex items-center justify-between p-3 gap-3 rounded-xl bg-[#F0FDF4] transition-colors h-[60px]">
+                  <Link href="/orders/allorders" className="flex items-center justify-between p-3 gap-3 rounded-xl hover:bg-gray-50 transition-colors group h-[60px]">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 bg-[#22C55E] rounded-lg flex items-center justify-center">
-                        <Settings className="w-[18px] h-[18px] text-white" />
+                      <div className="w-9 h-9 bg-[#F3F4F6] rounded-lg flex items-center justify-center transition-colors">
+                        <Package className="w-4 h-4 text-[#6A7282]" />
                       </div>
-                      <span className="font-medium text-[16px] leading-[24px] text-[#15803D]">Settings</span>
+                      <span className="font-medium text-[16px] leading-[24px] text-[#4A5565]">My Orders</span>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-[#22C55E]" />
+                    <ChevronRight className="w-4 h-4 text-[#99A1AF]" />
                   </Link>
                 </li>
               </ul>
@@ -312,7 +326,7 @@ export default function AccountPage() {
           <main className="flex-1 flex flex-col gap-[24px] max-w-[1184px] w-full">
             
             {/* Header Text */}
-            <div className="flex flex-col gap-1 w-full">
+            <div className="flex flex-col gap-1 w-full" id="settings">
               <h2 className="text-[20px] font-bold text-[#101828] leading-[28px]">Account Settings</h2>
               <p className="text-[14px] font-medium text-[#6A7282] leading-[20px]">Update your profile information and change your password</p>
             </div>
@@ -504,7 +518,7 @@ export default function AccountPage() {
             </div>
 
             {/* Card 3: My Addresses */}
-            <div className="bg-white border border-[#F3F4F6] rounded-[24px] shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)] flex flex-col w-full h-auto">
+            <div id="addresses" className="bg-white border border-[#F3F4F6] rounded-[24px] shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)] flex flex-col w-full h-auto">
               <div className="p-[32px] flex flex-col gap-[24px] w-full">
                 <div className="flex items-center gap-4 w-full">
                   <div className="w-14 h-14 bg-[#DCFCE7] rounded-2xl flex items-center justify-center shrink-0">

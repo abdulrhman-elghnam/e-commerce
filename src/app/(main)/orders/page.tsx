@@ -4,12 +4,12 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   Package,
   Truck,
   CheckCircle2,
   Clock,
-  XCircle,
   CreditCard,
   ArrowLeft,
   Loader2,
@@ -81,7 +81,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/signIn");
+      router.push("/signin");
       return;
     }
 
@@ -101,8 +101,9 @@ export default function OrdersPage() {
         } else {
           setOrders([]);
         }
-      } catch (err: any) {
-        setError(err.message || "Failed to load orders");
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to load orders";
+        setError(message);
       } finally {
         setLoading(false);
       }
@@ -234,9 +235,7 @@ export default function OrdersPage() {
                         <span
                           className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium ${statusInfo.bg} ${statusInfo.color}`}
                         >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${statusInfo.dot}`}
-                          />
+                          <StatusIcon className="w-3.5 h-3.5" />
                           {statusInfo.label}
                         </span>
                       </div>
@@ -250,12 +249,14 @@ export default function OrdersPage() {
                           className="flex items-center gap-4 py-3 first:pt-0 last:pb-0"
                         >
                           {/* Thumbnail */}
-                          <div className="w-14 h-14 bg-[#F9FAFB] border border-[#F3F4F6] rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+                          <div className="relative w-14 h-14 bg-[#F9FAFB] border border-[#F3F4F6] rounded-lg flex items-center justify-center overflow-hidden shrink-0">
                             {item.product?.imageCover ? (
-                              <img
+                              <Image
                                 src={item.product.imageCover}
                                 alt={item.product.title}
-                                className="w-full h-full object-contain"
+                                fill
+                                sizes="56px"
+                                className="object-contain"
                               />
                             ) : (
                               <Package className="w-5 h-5 text-[#99A1AF]" />

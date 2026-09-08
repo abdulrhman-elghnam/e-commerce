@@ -1,6 +1,8 @@
-"use client"
-import React, { useState, useEffect } from 'react'
-import { Card } from '@/components/ui/card'
+"use client";
+
+import React, { useState } from 'react';
+import Image from 'next/image';
+import { Card } from '@/components/ui/card';
 
 interface ProductGalleryProps {
   images: string[];
@@ -9,13 +11,15 @@ interface ProductGalleryProps {
 }
 
 export default function ProductGallery({ images, imageCover, title }: ProductGalleryProps) {
-  const [activeImage, setActiveImage] = useState(imageCover);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [prevImageCover, setPrevImageCover] = useState(imageCover);
 
-  useEffect(() => {
-    if (imageCover) {
-      setActiveImage(imageCover);
-    }
-  }, [imageCover]);
+  if (prevImageCover !== imageCover) {
+    setPrevImageCover(imageCover);
+    setSelectedImage(null);
+  }
+
+  const activeImage = selectedImage ?? imageCover;
 
   // Combine imageCover and images, keeping only unique values
   const allImages = [imageCover, ...(images || [])].filter(Boolean);
@@ -24,11 +28,22 @@ export default function ProductGallery({ images, imageCover, title }: ProductGal
   return (
     <div className="w-full lg:w-[400px] xl:w-[480px] shrink-0 flex flex-col gap-4">
       {/* Main Image */}
-      <Card className="p-4 aspect-[3/4] relative overflow-hidden flex items-center justify-center rounded-xl shadow-sm border-[#E5E7EB]">
+      <Card className="p-4 aspect-[3/4] relative overflow-hidden flex items-center justify-center rounded-xl shadow-sm border-[#E5E7EB] bg-white">
         {activeImage ? (
-          <img src={activeImage} alt={title} className="w-full h-full object-contain transition-opacity duration-300" />
+          <div className="relative w-full h-full">
+            <Image 
+              src={activeImage} 
+              alt={title} 
+              fill 
+              sizes="(max-width: 1024px) 100vw, 480px" 
+              className="object-contain transition-opacity duration-300" 
+              priority 
+            />
+          </div>
         ) : (
-          <div className="w-full h-full bg-gray-100 rounded-lg"></div>
+          <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+            No image available
+          </div>
         )}
       </Card>
       {/* Thumbnails */}
@@ -36,13 +51,20 @@ export default function ProductGallery({ images, imageCover, title }: ProductGal
         {uniqueImages.map((img, idx) => (
           <button 
             key={idx} 
-            onClick={() => setActiveImage(img)}
-            className={`flex-1 min-w-[70px] sm:min-w-[90px] rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden transition-all ${activeImage === img ? 'border-4 border-[#16A34A]' : 'border-4 border-transparent hover:border-gray-300'}`}
+            type="button"
+            onClick={() => setSelectedImage(img)}
+            className={`relative flex-1 min-w-[70px] sm:min-w-[90px] h-full rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden transition-all ${activeImage === img ? 'border-4 border-[#16A34A]' : 'border-4 border-transparent hover:border-gray-300'}`}
           >
-            <img src={img} alt={`${title} thumbnail ${idx + 1}`} className={`w-full h-full object-contain transition-opacity ${activeImage === img ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`} />
+            <Image 
+              src={img} 
+              alt={`${title} thumbnail ${idx + 1}`} 
+              fill 
+              sizes="90px" 
+              className={`object-contain transition-opacity ${activeImage === img ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`} 
+            />
           </button>
         ))}
       </div>
     </div>
-  )
+  );
 }

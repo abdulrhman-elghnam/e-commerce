@@ -14,7 +14,6 @@ import {
   EyeOff,
   ArrowLeft,
   Loader2,
-  AlertCircle,
   CheckCircle2,
   ShieldCheck,
 } from "lucide-react";

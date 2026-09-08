@@ -42,8 +42,8 @@ export const authOptions: AuthOptions = {
           }
 
           throw new Error(data.message || "Invalid credentials");
-        } catch (error: any) {
-          throw new Error(error.message || "Failed to log in");
+        } catch (error: unknown) {
+          throw new Error(error instanceof Error ? error.message : "Failed to log in");
         }
       }
     })
@@ -73,7 +73,7 @@ export const authOptions: AuthOptions = {
   session: {
     strategy: "jwt",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || "freshcart-production-auth-fallback-secret-key-32chars",
 };
 
 const handler = NextAuth(authOptions);

@@ -48,7 +48,7 @@ export default function CheckoutForm({ cartId, subtotal, itemCount }: CheckoutFo
     handleSubmit,
     formState: { errors },
   } = useForm<CheckoutFormValues>({
-    resolver: zodResolver(checkoutSchema as any),
+    resolver: zodResolver(checkoutSchema),
     defaultValues: {
       details: "",
       phone: "",
@@ -58,7 +58,7 @@ export default function CheckoutForm({ cartId, subtotal, itemCount }: CheckoutFo
 
   const onSubmit = async (values: CheckoutFormValues) => {
     if (!session?.user?.token) {
-      router.push("/signIn");
+      router.push("/signin");
       return;
     }
 
@@ -103,15 +103,15 @@ export default function CheckoutForm({ cartId, subtotal, itemCount }: CheckoutFo
       }
 
       // If backend returns a Stripe session URL, redirect to it
-      if (data.session?.url) {
-        window.location.href = data.session.url;
-      } else if (data.url) {
-        window.location.href = data.url;
+      const targetUrl = data.session?.url || data.url;
+      if (targetUrl) {
+        window.location.assign(targetUrl);
       } else {
         router.push("/orders/allorders");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Something went wrong during checkout.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong during checkout.";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

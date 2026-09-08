@@ -12,34 +12,46 @@ import { setWishlistCount, decrementWishlist } from '@/lib/redux/slices/wishlist
 import { addToCart } from '@/lib/services/cartService';
 import { incrementCart } from '@/lib/redux/slices/cartSlice';
 
+interface WishlistItem {
+  _id: string;
+  title: string;
+  price: number;
+  quantity: number;
+  imageCover?: string;
+  category?: { name?: string };
+}
+
 export default function WishlistPage() {
   const { data: session, status } = useSession();
   const dispatch = useDispatch();
-  const [items, setItems] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<WishlistItem[]>([]);
+  const [isFetchingWishlist, setIsFetchingWishlist] = useState(false);
 
-  useEffect(() => {
-    if (status === "authenticated" && session?.user?.token) {
-      loadWishlist();
-    } else if (status === "unauthenticated") {
-      setIsLoading(false);
-    }
-  }, [status, session]);
+  const isLoading = status === "loading" || isFetchingWishlist;
 
-  const loadWishlist = async () => {
+  const loadWishlist = React.useCallback(async () => {
+    if (!session?.user?.token) return;
     try {
-      setIsLoading(true);
-      const res = await getWishlist(session!.user!.token);
+      setIsFetchingWishlist(true);
+      const res = await getWishlist(session.user.token);
       setItems(res.data || []);
       if (res.data) {
         dispatch(setWishlistCount(res.data.length));
       }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to load wishlist");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to load wishlist";
+      toast.error(message);
     } finally {
-      setIsLoading(false);
+      setIsFetchingWishlist(false);
     }
-  };
+  }, [session, dispatch]);
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadWishlist();
+    }
+  }, [status, session, loadWishlist]);
 
   const handleRemove = async (productId: string) => {
     if (!session?.user?.token) return;
@@ -48,19 +60,21 @@ export default function WishlistPage() {
       toast.success("Product removed from wishlist");
       setItems(prev => prev.filter(item => item._id !== productId));
       dispatch(decrementWishlist());
-    } catch (err: any) {
-      toast.error(err.message || "Failed to remove item");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to remove item";
+      toast.error(message);
     }
   };
 
-  const handleAddToCart = async (item: any) => {
+  const handleAddToCart = async (item: WishlistItem) => {
     if (!session?.user?.token) return toast.error("Please sign in to add items to cart");
     try {
       await addToCart(session.user.token, item._id);
       dispatch(incrementCart());
       toast.success("Added to cart");
-    } catch (err: any) {
-      toast.error(err.message || "Could not add item to cart");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not add item to cart";
+      toast.error(message);
     }
   };
   return (
@@ -127,9 +141,37 @@ export default function WishlistPage() {
                 )}
                 
                 {!isLoading && items.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-16 gap-4">
-                    <Heart className="w-12 h-12 text-[#99A1AF]" />
-                    <p className="text-[16px] text-[#6A7282] font-medium">Your wishlist is empty</p>
+                  <div className="flex flex-col items-center justify-center py-16 px-6 gap-4 text-center">
+                    <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center text-[#FB2C36]">
+                      <Heart className="w-8 h-8" />
+                    </div>
+                    {status === "unauthenticated" ? (
+                      <>
+                        <h3 className="text-xl font-bold text-[#101828]">Sign In to View Wishlist</h3>
+                        <p className="text-sm text-[#6A7282] max-w-sm">
+                          Save your favorite items and access them across all your devices.
+                        </p>
+                        <Link 
+                          href="/signin" 
+                          className="mt-2 inline-flex items-center justify-center px-6 py-2.5 bg-[#16A34A] text-white text-sm font-semibold rounded-xl hover:bg-[#15803D] transition-colors"
+                        >
+                          Sign In Now
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <h3 className="text-xl font-bold text-[#101828]">Your Wishlist is Empty</h3>
+                        <p className="text-sm text-[#6A7282] max-w-sm">
+                          Explore our collection and click the heart icon on any product to save it here!
+                        </p>
+                        <Link 
+                          href="/shop" 
+                          className="mt-2 inline-flex items-center justify-center px-6 py-2.5 bg-[#16A34A] text-white text-sm font-semibold rounded-xl hover:bg-[#15803D] transition-colors"
+                        >
+                          Explore Products
+                        </Link>
+                      </>
+                    )}
                   </div>
                 )}
 

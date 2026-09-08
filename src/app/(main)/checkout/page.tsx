@@ -45,8 +45,8 @@ export default function CheckoutPage() {
         setCartId(resolvedCartId);
         setSubtotal(cart?.data?.totalCartPrice || 0);
         setItemCount(cart?.data?.products?.length || 0);
-      } catch (err: any) {
-        toast.error(err.message || "Failed to load checkout cart");
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : "Failed to load checkout cart");
         router.push("/cart");
       } finally {
         setLoading(false);

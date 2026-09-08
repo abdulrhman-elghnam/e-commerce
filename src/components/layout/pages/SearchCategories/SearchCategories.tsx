@@ -10,7 +10,6 @@ import {
   Heart, 
   ArrowRightLeft, 
   Eye, 
-  ShoppingCart, 
   Star, 
   ChevronDown,
   Loader2,
@@ -27,15 +26,44 @@ import AddToCartButton from '@/components/layout/shared/AddToCartButton';
 
 const API_BASE = "https://ecommerce.routemisr.com/api/v1";
 
+interface FilterCategory {
+  _id: string;
+  name: string;
+  slug?: string;
+  image?: string;
+}
+
+interface FilterBrand {
+  _id: string;
+  name: string;
+  slug?: string;
+  image?: string;
+}
+
+interface SearchProduct {
+  _id: string;
+  title: string;
+  slug?: string;
+  imageCover?: string;
+  price: number;
+  priceAfterDiscount?: number;
+  ratingsAverage?: number;
+  ratingsQuantity?: number;
+  quantity?: number;
+  sold?: number;
+  category?: { _id: string; name: string };
+  brand?: { _id: string; name: string };
+}
+
 export default function SearchCategories() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const { data: session } = useSession();
   const dispatch = useDispatch();
 
   // ---- Data from API ----
-  const [categories, setCategories] = useState<any[]>([]);
-  const [brands, setBrands] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<FilterCategory[]>([]);
+  const [brands, setBrands] = useState<FilterBrand[]>([]);
+  const [products, setProducts] = useState<SearchProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [totalResults, setTotalResults] = useState(0);
 
@@ -99,6 +127,7 @@ export default function SearchCategories() {
   }, [keyword, selectedCategories, selectedBrands, minPrice, maxPrice, sortBy, currentPage]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProducts();
   }, [fetchProducts]);
 
@@ -156,8 +185,8 @@ export default function SearchCategories() {
        await addToWishlist(session.user.token, id);
        dispatch(incrementWishlist());
        toast.success("Added to wishlist!");
-    } catch (err: any) {
-       toast.error(err.message || "Failed to add to wishlist");
+    } catch (err: unknown) {
+       toast.error(err instanceof Error ? err.message : "Failed to add to wishlist");
     }
   };
 
@@ -400,9 +429,9 @@ export default function SearchCategories() {
             {/* Products Grid */}
             {!isLoading && products.length > 0 && (
               <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
-                {products.map((product: any) => {
-                  const isDiscounted = product.priceAfterDiscount && product.priceAfterDiscount < product.price;
-                  const discountPct = isDiscounted
+                {products.map((product: SearchProduct) => {
+                  const isDiscounted = Boolean(product.priceAfterDiscount && product.priceAfterDiscount < product.price);
+                  const discountPct = isDiscounted && product.priceAfterDiscount
                     ? Math.round(((product.price - product.priceAfterDiscount) / product.price) * 100)
                     : 0;
 
@@ -417,10 +446,12 @@ export default function SearchCategories() {
                       {/* Product Image */}
                       <div className={`relative bg-white flex shrink-0 items-center justify-center overflow-hidden pointer-events-none ${viewMode === 'list' ? 'w-[290px] h-full sm:h-[240px]' : 'w-full h-[240px]'}`}>
                         {product.imageCover ? (
-                          <img 
+                          <Image 
                             src={product.imageCover} 
                             alt={product.title} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                            fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                            className="object-contain p-2 group-hover:scale-105 transition-transform duration-500" 
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-white via-gray-100 to-gray-50 flex items-center justify-center text-gray-300">

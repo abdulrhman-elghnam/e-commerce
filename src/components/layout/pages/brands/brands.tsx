@@ -96,7 +96,7 @@ export default function BrandsPage() {
   return (
     <div className="min-h-screen flex flex-col items-center pb-10 gap-10 bg-[rgba(249,250,251,0.5)] font-['Exo']">
       {/* Hero Header */}
-      <div className="w-full flex flex-col items-start px-4 md:px-12 lg:px-[192px]" style={{ background: "linear-gradient(135deg, #7F22FE 0%, #8E51FF 50%, #C27AFF 100%)" }}>
+      <div className="w-full flex flex-col items-start px-4 md:px-12 lg:px-[192px] bg-gradient-to-r from-[#15803D] via-[#16A34A] to-[#22C55E]">
         <div className="container max-w-[1536px] w-full mx-auto flex flex-col items-start px-4 py-16 gap-6" style={{ height: 240 }}>
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export default function BrandsPage() {
           {/* Title Section */}
           <div className="flex items-center gap-5">
             {/* Icon */}
-            <div className="relative w-16 h-16 flex items-center justify-center rounded-2xl bg-white/20 backdrop-blur-[4px]" style={{ boxShadow: "0px 0px 0px 1px rgba(255, 255, 255, 0.3), 0px 20px 25px -5px rgba(0, 0, 0, 0.1), 0px 8px 10px -6px rgba(0, 0, 0, 0.1)" }}>
+            <div className="relative w-16 h-16 flex items-center justify-center rounded-2xl bg-white/20 backdrop-blur-[4px] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] border border-white/30">
               <Tag className="w-[30px] h-[30px] text-white" strokeWidth={2.2} />
             </div>
 
@@ -127,7 +127,7 @@ export default function BrandsPage() {
                 Top Brands
               </h1>
               <p className="text-[16px] leading-[24px] font-medium text-white/80">
-                Shop from your favorite brands
+                Shop authentic products from your favorite certified brands
               </p>
             </div>
           </div>
@@ -137,7 +137,7 @@ export default function BrandsPage() {
       {/* Loading State */}
       {isLoading && (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-[#7F22FE]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#16A34A]" />
         </div>
       )}
 
@@ -147,7 +147,7 @@ export default function BrandsPage() {
           <p className="text-[16px] text-[#6A7282] font-medium">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="text-[14px] font-medium text-[#7F22FE] hover:underline"
+            className="text-[14px] font-medium text-[#16A34A] hover:underline"
           >
             Try again
           </button>
@@ -159,7 +159,7 @@ export default function BrandsPage() {
           <p className="text-[16px] text-[#6A7282] font-medium">No brands found.</p>
           <button
             onClick={() => window.location.reload()}
-            className="text-[14px] font-medium text-[#7F22FE] hover:underline"
+            className="text-[14px] font-medium text-[#16A34A] hover:underline"
           >
             Refresh
           </button>
@@ -174,14 +174,14 @@ export default function BrandsPage() {
               <Link
                 key={brand._id}
                 href={`/brands/${brand._id}`}
-                className="group relative flex flex-col bg-white border border-[#F3F4F6] rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+                className="group relative flex flex-col bg-white border border-[#F3F4F6] hover:border-[#16A34A]/30 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
                 style={{
                   boxShadow:
                     "0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px -1px rgba(0, 0, 0, 0.1)",
                 }}
               >
                 {/* Brand Image Container */}
-                <div className="flex items-center justify-center p-4 mx-[21px] mt-[21px] bg-[#F9FAFB] rounded-xl aspect-square">
+                <div className="flex items-center justify-center p-4 mx-[21px] mt-[21px] bg-[#F9FAFB] rounded-xl aspect-square group-hover:bg-emerald-50/50 transition-colors">
                   <Image
                     src={brand.image}
                     alt={brand.name}
@@ -193,14 +193,14 @@ export default function BrandsPage() {
 
                 {/* Brand Name */}
                 <div className="flex flex-col items-center px-[21px] pt-3 pb-2">
-                  <h3 className="text-[14px] leading-[20px] font-semibold text-[#101828] text-center">
+                  <h3 className="text-[14px] leading-[20px] font-semibold text-[#101828] group-hover:text-[#16A34A] transition-colors text-center">
                     {brand.name}
                   </h3>
                 </div>
 
                 {/* View Products Link - appears on hover */}
                 <div className="flex justify-center items-start px-[21px] pb-[21px] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span className="flex items-center gap-1 text-[12px] leading-[16px] font-medium text-[#7F22FE]">
+                  <span className="flex items-center gap-1 text-[12px] leading-[16px] font-semibold text-[#16A34A]">
                     View Products
                     <ArrowRight className="w-[12.5px] h-[10px]" />
                   </span>

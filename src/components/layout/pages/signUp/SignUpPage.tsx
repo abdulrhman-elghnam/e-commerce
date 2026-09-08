@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
-import { z } from 'zod';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { signIn } from 'next-auth/react';
 import { registerSchema, RegisterFormValues } from './schema';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +22,6 @@ export default function SignUpPage() {
     register,
     handleSubmit,
     control,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -38,7 +36,7 @@ export default function SignUpPage() {
     },
   });
 
-  const passwordVal = watch("password") || "";
+  const passwordVal = useWatch({ control, name: "password" }) || "";
 
   const onSubmit = async (data: RegisterFormValues) => {
     try {
@@ -77,7 +75,7 @@ export default function SignUpPage() {
         toast.success("Account created. Please sign in.");
         router.push("/signin");
       }
-    } catch (err: any) {
+    } catch {
       toast.error("An unexpected error occurred. Please try again.");
     }
   };

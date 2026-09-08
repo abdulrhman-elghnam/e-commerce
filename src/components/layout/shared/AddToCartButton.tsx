@@ -35,8 +35,9 @@ export default function AddToCartButton({
             await addToCart(session.user.token, productId);
             dispatch(incrementCart());
             toast.success("Successfully added to cart!");
-        } catch (err: any) {
-            toast.error(err.message || "Failed to add to cart");
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Failed to add to cart";
+            toast.error(message);
         } finally {
             setIsLoading(false);
         }

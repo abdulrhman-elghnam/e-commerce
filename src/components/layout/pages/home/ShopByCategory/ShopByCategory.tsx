@@ -1,9 +1,10 @@
 import Link from "next/link"
+import Image from "next/image"
 import { FiArrowRight } from "react-icons/fi"
-import type { RootShopByCat, ShopByCategoryCard } from "./ ShopByCategoryInterface"
-import { getCategories } from "@/service/Categories.service";
-export default async function ShopByCategory() {
+import type { RootShopByCat, ShopByCategoryCard } from "./ShopByCategoryInterface"
+import { getCategories } from "@/service/Categories.service"
 
+export default async function ShopByCategory() {
     const response: RootShopByCat | { data?: RootShopByCat | ShopByCategoryCard[] } = await getCategories()
     const categories: ShopByCategoryCard[] = Array.isArray((response as RootShopByCat).data)
         ? (response as RootShopByCat).data
@@ -12,38 +13,49 @@ export default async function ShopByCategory() {
             : []
 
     return (
-        <section className="w-full py-8">
+        <section className="w-full py-10">
             <div className="app-container flex flex-col gap-8">
                 <div className="flex items-center justify-between">
-                    <div className="flex flex-col py-8">
-                        <div className="flex items-center gap-3">
-                            <span className="h-8 w-1.5 rounded-full bg-linear-to-b from-[#00BC7D] to-[#007A55]" />
-                            <h2 className="text-3xl leading-9 font-bold text-[#1E2939]">Shop By Category</h2>
+                    <div className="flex items-center gap-3">
+                        <span className="h-8 w-1.5 rounded-full bg-gradient-to-b from-[#16A34A] to-[#15803D]" />
+                        <div>
+                            <h2 className="text-2xl sm:text-3xl font-bold text-[#1E2939]">Shop By Category</h2>
+                            <p className="text-sm text-[#6A7282] mt-0.5">Explore our top collections of daily essentials</p>
                         </div>
                     </div>
 
-                    <Link href="/categories" className="flex items-center text-base font-medium text-[#16A34A] hover:underline">
-                        <span>View All Categories</span>
-                        <FiArrowRight className="ml-2 size-4" />
+                    <Link 
+                        href="/categories" 
+                        className="inline-flex items-center text-sm sm:text-base font-semibold text-[#16A34A] hover:text-[#15803D] group transition-colors"
+                    >
+                        <span>View All</span>
+                        <FiArrowRight className="ml-1.5 size-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                    {categories.map((item) => (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-5">
+                    {categories.slice(0, 6).map((item) => (
                         <Link
                             key={item._id}
-                            href={`/categories/${item.slug}`}
-                            className="flex min-h-[148px] flex-col items-center gap-3 rounded-lg bg-white p-4 text-center shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] transition-transform hover:-translate-y-0.5"
+                            href={`/shop?category=${item._id}`}
+                            className="group flex flex-col items-center gap-3 rounded-2xl bg-white border border-[#E5E7EB] p-4 text-center transition-all duration-300 hover:-translate-y-1 hover:border-[#16A34A]/40 hover:shadow-md"
                         >
-                            <div className="flex size-20 items-center justify-center rounded-full bg-[#DCFCE7]">
-                                <img
-                                    src={item.image}
-                                    alt={item.name}
-                                    className="size-20 rounded-full object-cover"
-                                    loading="lazy"
-                                />
+                            <div className="relative size-20 sm:size-24 rounded-full bg-[#F0FDF4] p-2 flex items-center justify-center overflow-hidden border border-emerald-100 group-hover:scale-105 transition-transform duration-300">
+                                {item.image ? (
+                                    <Image
+                                        src={item.image}
+                                        alt={item.name}
+                                        width={96}
+                                        height={96}
+                                        className="size-full rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="size-full rounded-full bg-emerald-100" />
+                                )}
                             </div>
-                            <h3 className="text-base font-medium text-[#364153]">{item.name}</h3>
+                            <h3 className="text-sm sm:text-base font-semibold text-[#364153] group-hover:text-[#16A34A] transition-colors line-clamp-1">
+                                {item.name}
+                            </h3>
                         </Link>
                     ))}
                 </div>

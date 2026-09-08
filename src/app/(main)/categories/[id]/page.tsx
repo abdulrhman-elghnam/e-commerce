@@ -1,8 +1,8 @@
 import React from 'react'
 import {
-    Home, ChevronRight, Star, ShoppingCart, Zap, Heart,
+    Home, ChevronRight, Star, Zap,
     ArrowLeftRight, Truck, RefreshCcw, ShieldCheck, FileText,
-    MessageSquare, CheckCircle2, Eye
+    MessageSquare, CheckCircle2
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -11,13 +11,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-    Carousel,
-    CarouselContent,
-    CarouselItem,
-    CarouselNext,
-    CarouselPrevious
-} from '@/components/ui/carousel'
 import { Data } from './interface';
 import ProductGallery from './ProductGallery';
 import WishlistButton from './WishlistButton';
@@ -35,13 +28,15 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
         <section className="container mx-auto px-4 sm:px-8 lg:px-12 py-8 flex flex-col gap-8">
             {/* Breadcrumb */}
             <div className="flex items-center text-sm font-medium text-[#6A7282] gap-2 flex-wrap">
-                <span className="flex items-center gap-1 hover:text-[#101828] cursor-pointer transition-colors">
+                <Link href="/" className="flex items-center gap-1 hover:text-[#101828] cursor-pointer transition-colors">
                     <Home size={14} /> Home
-                </span>
+                </Link>
                 <ChevronRight size={14} className="text-[#99A1AF]" />
-                <span className="hover:text-[#101828] cursor-pointer transition-colors">{item?.category?.name || 'Category'}</span>
+                <Link href={`/shop?category=${item?.category?._id || ''}`} className="hover:text-[#101828] cursor-pointer transition-colors">
+                    {item?.category?.name || 'Category'}
+                </Link>
                 <ChevronRight size={14} className="text-[#99A1AF]" />
-                <span className="text-[#101828]">{item?.title || 'Loading...'}</span>
+                <span className="text-[#101828] font-semibold">{item?.title || 'Product'}</span>
             </div>
 
             <div className="flex flex-col lg:flex-row gap-8 items-start">

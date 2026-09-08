@@ -16,48 +16,63 @@ import {
   Trash2, 
   FileText, 
   Truck, 
-  Tag, 
   Lock, 
   ShieldCheck, 
   Zap,
   ArrowLeft
 } from 'lucide-react';
 
+interface CartProductItem {
+  _id: string;
+  count: number;
+  price: number;
+  product: {
+    _id: string;
+    title: string;
+    imageCover?: string;
+    category?: { name?: string };
+    brand?: { name?: string };
+  };
+}
+
 export default function CartPage() {
   const { data: session, status } = useSession();
   const dispatch = useDispatch();
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<CartProductItem[]>([]);
   const [subtotal, setSubtotal] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isFetchingCart, setIsFetchingCart] = useState(false);
   const [couponName, setCouponName] = useState("");
   const [isApplying, setIsApplying] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [cartId, setCartId] = useState("");
 
-  useEffect(() => {
-    if (status === "authenticated" && session?.user?.token) {
-      loadCart();
-    } else if (status === "unauthenticated") {
-      setIsLoading(false);
-    }
-  }, [status, session]);
+  const isLoading = status === "loading" || isFetchingCart;
 
-  const loadCart = async () => {
+  const loadCart = React.useCallback(async () => {
+    if (!session?.user?.token) return;
     try {
-      setIsLoading(true);
-      const res = await getCart(session!.user!.token);
+      setIsFetchingCart(true);
+      const res = await getCart(session.user.token);
       setItems(res.data?.products || []);
       setSubtotal(res.data?.totalCartPrice || 0);
       setCartId(res.data?._id || "");
       if (res.data) {
         dispatch(setCartCount(res.data.products?.length || 0));
       }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to load cart");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to load cart";
+      toast.error(message);
     } finally {
-      setIsLoading(false);
+      setIsFetchingCart(false);
     }
-  };
+  }, [session, dispatch]);
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadCart();
+    }
+  }, [status, session, loadCart]);
 
   const handleApplyCoupon = async () => {
     if (!couponName.trim()) return;
@@ -71,8 +86,9 @@ export default function CartPage() {
       toast.success("Coupon applied!");
       // If the API recalculates subtotal, update it
       if (res.data?.totalCartPrice) setSubtotal(res.data.totalCartPrice);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to apply coupon");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to apply coupon";
+      toast.error(message);
     } finally {
       setIsApplying(false);
     }
@@ -87,8 +103,9 @@ export default function CartPage() {
       setSubtotal(0);
       dispatch(setCartCount(0));
       toast.success("Cart cleared");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to clear cart");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to clear cart";
+      toast.error(message);
     } finally {
       setIsClearing(false);
     }
@@ -97,7 +114,6 @@ export default function CartPage() {
   const handleUpdateQuantity = async (productId: string, newCount: number) => {
     if (!session?.user?.token) return;
     if (newCount < 1) {
-      // Remove item by reloading after setting count to 0
       handleRemoveItem(productId);
       return;
     }
@@ -110,8 +126,9 @@ export default function CartPage() {
       if (res.data?.totalCartPrice !== undefined) {
         setSubtotal(res.data.totalCartPrice);
       }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update quantity");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to update quantity";
+      toast.error(message);
       loadCart(); // revert on failure
     }
   };
@@ -129,8 +146,9 @@ export default function CartPage() {
       const res = await getCart(session.user.token);
       setSubtotal(res.data?.totalCartPrice || 0);
       toast.success("Item removed from cart");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to remove item");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to remove item";
+      toast.error(message);
       loadCart();
     }
   };
@@ -171,9 +189,37 @@ export default function CartPage() {
           <div className="flex flex-col gap-6 w-full lg:w-[992px] max-w-full">
             <div className="flex flex-col gap-4 w-full">
               {!isLoading && items.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-16 gap-4 bg-white border border-[#F3F4F6] rounded-2xl shadow-sm">
-                  <ShoppingCart className="w-12 h-12 text-[#99A1AF]" />
-                  <p className="text-[16px] text-[#6A7282] font-medium">Your cart is empty.</p>
+                <div className="flex flex-col items-center justify-center py-16 px-6 gap-4 bg-white border border-[#F3F4F6] rounded-2xl shadow-sm text-center">
+                  <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center text-[#16A34A]">
+                    <ShoppingCart className="w-8 h-8" />
+                  </div>
+                  {status === "unauthenticated" ? (
+                    <>
+                      <h3 className="text-xl font-bold text-[#101828]">Please Sign In</h3>
+                      <p className="text-sm text-[#6A7282] max-w-sm">
+                        You need to be signed in to see the items in your cart and proceed to checkout.
+                      </p>
+                      <Link 
+                        href="/signin" 
+                        className="mt-2 inline-flex items-center justify-center px-6 py-2.5 bg-[#16A34A] text-white text-sm font-semibold rounded-xl hover:bg-[#15803D] transition-colors"
+                      >
+                        Sign In Now
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-xl font-bold text-[#101828]">Your Cart is Empty</h3>
+                      <p className="text-sm text-[#6A7282] max-w-sm">
+                        Explore our fresh catalogue and find items you love!
+                      </p>
+                      <Link 
+                        href="/shop" 
+                        className="mt-2 inline-flex items-center justify-center px-6 py-2.5 bg-[#16A34A] text-white text-sm font-semibold rounded-xl hover:bg-[#15803D] transition-colors"
+                      >
+                        Start Shopping
+                      </Link>
+                    </>
+                  )}
                 </div>
               )}
               

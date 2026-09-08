@@ -9,12 +9,23 @@ import { incrementWishlist } from '@/lib/redux/slices/wishlistSlice';
 import { addToWishlist } from '@/lib/services/wishlistService';
 import { toast } from 'sonner';
 
-export default function WishlistButton({ productId }: { productId: string }) {
+export default function WishlistButton({ 
+  productId,
+  variant = 'default',
+}: { 
+  productId: string;
+  variant?: 'default' | 'icon';
+}) {
     const { data: session } = useSession();
     const dispatch = useDispatch();
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleAddWishlist = async () => {
+    const handleAddWishlist = async (e?: React.MouseEvent) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
         if (!session?.user?.token) {
             toast.error("Please sign in to add to wishlist");
             return;
@@ -25,12 +36,27 @@ export default function WishlistButton({ productId }: { productId: string }) {
             await addToWishlist(session.user.token, productId);
             dispatch(incrementWishlist());
             toast.success("Successfully added to wishlist!");
-        } catch (err: any) {
-            toast.error(err.message || "Failed to add to wishlist");
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Failed to add to wishlist";
+            toast.error(message);
         } finally {
             setIsLoading(false);
         }
     };
+
+    if (variant === 'icon') {
+        return (
+            <button
+                type="button"
+                onClick={handleAddWishlist}
+                disabled={isLoading}
+                className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md text-[#4A5565] hover:bg-[#FB2C36] hover:text-white transition-colors disabled:opacity-50"
+                title="Add to Wishlist"
+            >
+                <Heart size={16} className={isLoading ? 'animate-pulse' : ''} />
+            </button>
+        );
+    }
 
     return (
         <Button 
