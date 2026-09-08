@@ -33,7 +33,7 @@ export const authOptions: AuthOptions = {
             // Decoding the JWT on the client safely to extract ID if necessary, 
             // but RouteMISR often embeds ID in the token string itself, which NextAuth will hold.
             return {
-              id: data.user?.email || "1", // Fallback ID
+              id: data.user?._id || data.user?.id || data.user?.email || "1",
               name: data.user?.name,
               email: data.user?.email,
               role: data.user?.role,

@@ -92,15 +92,19 @@ export default function OrdersPage() {
       setError(null);
       try {
         const res = await fetch(
-          `https://ecommerce.routemisr.com/api/v1/orders/user/${session.user.id}`
+          `https://ecommerce.routemisr.com/api/v1/orders/user/${session.user.id}`,
+          {
+            headers: { token: session.user.token },
+          }
         );
         const data = await res.json();
 
-        if (Array.isArray(data)) {
-          setOrders(data);
-        } else {
-          setOrders([]);
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to load orders");
         }
+
+        const userOrders = Array.isArray(data) ? data : data.data;
+        setOrders(Array.isArray(userOrders) ? userOrders : []);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to load orders";
         setError(message);

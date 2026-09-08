@@ -7,12 +7,12 @@ import { z } from "zod";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { 
-  MapPin, 
-  Phone, 
-  FileText, 
-  Loader2, 
-  AlertCircle, 
+import {
+  MapPin,
+  Phone,
+  FileText,
+  Loader2,
+  AlertCircle,
   Lock,
   ShieldCheck,
   Zap
@@ -82,8 +82,9 @@ export default function CheckoutForm({ cartId, subtotal, itemCount }: CheckoutFo
           ? `${window.location.origin}/orders/allorders`
           : "http://localhost:3000";
 
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "https://ecommerce.routemisr.com/api/v1";
       const res = await fetch(
-        `https://ecommerce.routemisr.com/api/v1/orders/checkout-session/${cartId}?url=${encodeURIComponent(returnUrl)}`,
+        `${apiBase}/orders/checkout-session/${cartId}?url=${encodeURIComponent(returnUrl)}`,
         {
           method: "POST",
           headers: {
@@ -102,8 +103,8 @@ export default function CheckoutForm({ cartId, subtotal, itemCount }: CheckoutFo
         throw new Error(data.message || "Checkout failed. Please try again.");
       }
 
-      // If backend returns a Stripe session URL, redirect to it
-      const targetUrl = data.session?.url || data.url;
+      // The API can return the Stripe URL at the top level or inside data.
+      const targetUrl = data.session?.url || data.url || data.data?.session?.url || data.data?.url;
       if (targetUrl) {
         window.location.assign(targetUrl);
       } else {
@@ -119,7 +120,7 @@ export default function CheckoutForm({ cartId, subtotal, itemCount }: CheckoutFo
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5 font-['Exo']">
-      
+
       {/* Section Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 bg-[#DCFCE7] rounded-xl flex items-center justify-center shrink-0">
